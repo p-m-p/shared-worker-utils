@@ -29,6 +29,15 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/p-m-p/shared-worker-utils.git",
+    "directory": "packages/shared-worker-utils"
+  },
+  "bugs": {
+    "url": "https://github.com/p-m-p/shared-worker-utils/issues"
+  },
+  "homepage": "https://github.com/p-m-p/shared-worker-utils#readme",
   "devDependencies": {
     "@types/node": "^20.0.0",
     "jsdom": "^27.0.1",

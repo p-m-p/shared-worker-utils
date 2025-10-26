@@ -40,8 +40,8 @@ class MockSharedWorker {
 // Mock document
 const mockDocument = {
   hidden: false,
-  listeners: new Map<string, Function>(),
-  addEventListener(type: string, listener: Function) {
+  listeners: new Map<string, () => void>(),
+  addEventListener(type: string, listener: () => void) {
     this.listeners.set(type, listener);
   },
   simulateVisibilityChange(hidden: boolean) {
@@ -55,8 +55,8 @@ const mockDocument = {
 
 // Mock window
 const mockWindow = {
-  listeners: new Map<string, Function>(),
-  addEventListener(type: string, listener: Function) {
+  listeners: new Map<string, () => void>(),
+  addEventListener(type: string, listener: () => void) {
     this.listeners.set(type, listener);
   },
   simulateBeforeUnload() {

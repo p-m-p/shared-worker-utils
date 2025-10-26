@@ -3,9 +3,9 @@ import { PortManager } from '../src/port-manager';
 
 // Mock MessagePort
 class MockMessagePort {
-  private listeners = new Map<string, Function>();
+  private listeners = new Map<string, (event: MessageEvent) => void>();
 
-  addEventListener(type: string, listener: Function) {
+  addEventListener(type: string, listener: (event: MessageEvent) => void) {
     this.listeners.set(type, listener);
   }
 

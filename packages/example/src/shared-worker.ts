@@ -1,6 +1,9 @@
 // SharedWorker to manage a single WebSocket connection across multiple tabs
 import { PortManager } from 'shared-worker-utils';
 
+// Declare SharedWorker global
+declare const self: SharedWorkerGlobalScope;
+
 let socket: WebSocket | null = null;
 const WEBSOCKET_URL = "ws://localhost:8080";
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -14,7 +17,7 @@ function log(message: string, ...args: any[]) {
 const portManager = new PortManager({
   pingInterval: 10000,
   pingTimeout: 5000,
-  onActiveCountChange: (activeCount, totalCount) => {
+  onActiveCountChange: (activeCount, _totalCount) => {
     // Manage WebSocket connection based on active clients
     if (activeCount === 0 && socket) {
       log('[WebSocket] No active clients, pausing WebSocket connection');
@@ -24,7 +27,7 @@ const portManager = new PortManager({
       connectWebSocket();
     }
   },
-  onCustomMessage: (port, message) => {
+  onCustomMessage: (_port, message) => {
     // Forward custom messages to WebSocket server if needed
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(message));
@@ -110,7 +113,7 @@ function disconnectWebSocket() {
 }
 
 // Handle new port connections
-onconnect = (event: MessageEvent) => {
+self.onconnect = (event: MessageEvent) => {
   const port = event.ports[0];
 
   // Let PortManager handle all port management
