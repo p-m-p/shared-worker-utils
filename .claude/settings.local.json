@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install:*)",
+      "Bash(pnpm test)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm --filter shared-worker-utils test)",
+      "Bash(pnpm --filter shared-worker-utils build:*)",
+      "Bash(pnpm build:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

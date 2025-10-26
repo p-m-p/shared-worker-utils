@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SharedWorker WebSocket Demo</title>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Stock Prices - SharedWorker Demo</h1>
+        <div class="status-bar">
+          <div class="status-item">
+            <span class="label">Connection:</span>
+            <span id="connection-status" class="status disconnected">Disconnected</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Tabs:</span>
+            <span id="tab-count">0</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Active Tabs:</span>
+            <span id="active-tab-count">0</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Tab State:</span>
+            <span id="tab-visibility" class="status visible">Visible</span>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <div class="info-box">
+          <p><strong>How it works:</strong> This demo uses a SharedWorker to manage a single WebSocket connection shared across all open tabs. Open this page in multiple tabs to see them all sharing the same connection!</p>
+          <p><strong>Try it:</strong> Switch between tabs or minimize the window - the table updates pause when the tab is not visible to save resources.</p>
+        </div>
+
+        <div class="table-container">
+          <table id="stock-table">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>Change</th>
+                <th>% Change</th>
+                <th>Last Update</th>
+              </tr>
+            </thead>
+            <tbody id="stock-tbody">
+              <tr>
+                <td colspan="5" class="loading">Connecting to server...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

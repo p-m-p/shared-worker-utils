@@ -1,0 +1,17 @@
+{
+  "name": "shared-worker-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter example dev",
+    "server": "pnpm --filter example server",
+    "build": "pnpm --filter shared-worker-utils build && pnpm --filter example build",
+    "test": "pnpm --filter shared-worker-utils test"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "npm:rolldown-vite@7.1.14"
+    }
+  }
+}

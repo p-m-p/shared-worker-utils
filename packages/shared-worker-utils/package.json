@@ -1,0 +1,40 @@
+{
+  "name": "shared-worker-utils",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Utilities for managing SharedWorker port connections with ping/pong heartbeat and visibility tracking",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "sharedworker",
+    "worker",
+    "port",
+    "websocket",
+    "heartbeat",
+    "ping-pong"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "jsdom": "^27.0.1",
+    "typescript": "~5.9.3",
+    "vite": "^6.0.7",
+    "vite-plugin-dts": "^4.3.0",
+    "vitest": "^4.0.3"
+  }
+}
