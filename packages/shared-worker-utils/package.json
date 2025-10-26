@@ -1,6 +1,6 @@
 {
   "name": "shared-worker-utils",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Utilities for managing SharedWorker port connections with ping/pong heartbeat and visibility tracking",
   "main": "./dist/index.js",
