@@ -32,7 +32,12 @@ yarn add shared-worker-utils
 ```typescript
 import { PortManager } from 'shared-worker-utils';
 
-const portManager = new PortManager({
+// Define your application message types
+type ClientMessage =
+  | { type: 'request-data'; id: string }
+  | { type: 'custom-action'; payload: unknown };
+
+const portManager = new PortManager<ClientMessage>({
   pingInterval: 10000,  // Send ping every 10 seconds
   pingTimeout: 5000,    // Expect pong within 5 seconds of ping
   onActiveCountChange: (activeCount, totalCount) => {
@@ -45,8 +50,10 @@ const portManager = new PortManager({
     }
   },
   onMessage: (port, message) => {
-    // Handle application messages from clients (internal messages filtered out)
-    console.log('Application message:', message);
+    // message is typed as ClientMessage - internal messages filtered out
+    if (message.type === 'request-data') {
+      console.log('Data requested:', message.id);
+    }
   },
   onLog: (message, ...args) => {
     console.log(message, ...args);
@@ -75,14 +82,19 @@ const activeClients = portManager.getActiveCount();
 ```typescript
 import { PortWrapper } from 'shared-worker-utils';
 
+// Define message types from SharedWorker
+type WorkerMessage =
+  | { type: 'update'; data: string }
+  | { type: 'welcome'; data: string };
+
 const worker = new SharedWorker(
   new URL('./my-worker.ts', import.meta.url),
   { type: 'module' }
 );
 
-const wrapper = new PortWrapper(worker, {
+const wrapper = new PortWrapper<WorkerMessage>(worker, {
   onMessage: (message) => {
-    // Handle application messages from SharedWorker
+    // message is typed as WorkerMessage
     // Internal messages (ping, pong, client-count, visibility-change, disconnect) are filtered out
     switch (message.type) {
       case 'update':
@@ -114,10 +126,12 @@ wrapper.disconnect();
 
 ### PortManager
 
+`PortManager<TMessage = unknown>` - Generic type parameter for application messages from clients.
+
 #### Constructor Options
 
 ```typescript
-interface PortManagerOptions {
+interface PortManagerOptions<TMessage = unknown> {
   /** Interval between ping messages in milliseconds (default: 10000) */
   pingInterval?: number;
 
@@ -128,17 +142,17 @@ interface PortManagerOptions {
   onActiveCountChange?: (activeCount: number, totalCount: number) => void;
 
   /** Callback for non-internal messages from clients */
-  onMessage?: (port: MessagePort, message: any) => void;
+  onMessage?: (port: MessagePort, message: TMessage) => void;
 
   /** Callback for internal logging */
-  onLog?: (message: string, ...args: any[]) => void;
+  onLog?: (message: string, ...args: unknown[]) => void;
 }
 ```
 
 #### Methods
 
 - `handleConnect(port: MessagePort): void` - Handle a new port connection
-- `broadcast(message: any): void` - Broadcast a message to all connected clients
+- `broadcast(message: unknown): void` - Broadcast a message to all connected clients
 - `getActiveCount(): number` - Get the number of active (visible) clients
 - `getTotalCount(): number` - Get the total number of connected clients
 - `destroy(): void` - Clean up resources (stop ping interval)
@@ -160,21 +174,23 @@ These messages are sent by PortManager but are filtered out by PortWrapper and n
 
 ### PortWrapper
 
+`PortWrapper<TMessage = unknown>` - Generic type parameter for application messages from SharedWorker.
+
 #### Constructor Options
 
 ```typescript
-interface PortWrapperOptions {
+interface PortWrapperOptions<TMessage = unknown> {
   /** Callback for non-internal messages from SharedWorker */
-  onMessage: (message: any) => void;
+  onMessage: (message: TMessage) => void;
 
   /** Callback for internal logging */
-  onLog?: (message: string, ...args: any[]) => void;
+  onLog?: (message: string, ...args: unknown[]) => void;
 }
 ```
 
 #### Methods
 
-- `send(message: any): void` - Send a message to the SharedWorker
+- `send(message: unknown): void` - Send a message to the SharedWorker
 - `disconnect(): void` - Disconnect from the SharedWorker
 - `isVisible(): boolean` - Check if the tab is currently visible
 

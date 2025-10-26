@@ -1,17 +1,24 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { PortManager } from '../src/port-manager';
 
+// Test message type
+interface TestMessage {
+  type: string;
+  data?: string;
+}
+
 // Mock MessagePort
 class MockMessagePort {
   private listeners = new Map<string, (event: MessageEvent) => void>();
+  lastMessage?: unknown;
 
   addEventListener(type: string, listener: (event: MessageEvent) => void) {
     this.listeners.set(type, listener);
   }
 
-  postMessage(data: any) {
+  postMessage(data: unknown) {
     // Store sent messages for testing
-    (this as any).lastMessage = data;
+    this.lastMessage = data;
   }
 
   start() {
@@ -19,16 +26,16 @@ class MockMessagePort {
   }
 
   // Test helper to simulate receiving a message
-  simulateMessage(data: any) {
+  simulateMessage(data: unknown) {
     const listener = this.listeners.get('message');
     if (listener) {
-      listener({ data });
+      listener({ data } as MessageEvent);
     }
   }
 }
 
 describe('PortManager', () => {
-  let portManager: PortManager;
+  let portManager: PortManager<TestMessage>;
   let mockPort: MockMessagePort;
 
   beforeEach(() => {
@@ -50,8 +57,8 @@ describe('PortManager', () => {
     const onLog = vi.fn();
     portManager = new PortManager({ onLog });
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     expect(portManager.getTotalCount()).toBe(1);
     expect(portManager.getActiveCount()).toBe(1);
@@ -62,11 +69,11 @@ describe('PortManager', () => {
 
   it('should broadcast client count on connect', () => {
     portManager = new PortManager();
-    mockPort = new MockMessagePort() as any;
+    mockPort = new MockMessagePort() as unknown as MessagePort;
 
-    portManager.handleConnect(mockPort as any);
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
-    expect((mockPort as any).lastMessage).toEqual({
+    expect((mockPort as unknown as MessagePort).lastMessage).toEqual({
       type: 'client-count',
       total: 1,
       active: 1,
@@ -77,8 +84,8 @@ describe('PortManager', () => {
     const onLog = vi.fn();
     portManager = new PortManager({ onLog });
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     // Change visibility to hidden
     mockPort.simulateMessage({ type: 'visibility-change', visible: false });
@@ -89,9 +96,9 @@ describe('PortManager', () => {
 
   it('should handle disconnect messages', () => {
     portManager = new PortManager();
-    mockPort = new MockMessagePort() as any;
+    mockPort = new MockMessagePort() as unknown as MessagePort;
 
-    portManager.handleConnect(mockPort as any);
+    portManager.handleConnect(mockPort as unknown as MessagePort);
     expect(portManager.getTotalCount()).toBe(1);
 
     mockPort.simulateMessage({ type: 'disconnect' });
@@ -102,8 +109,8 @@ describe('PortManager', () => {
   it('should broadcast messages to all clients', () => {
     portManager = new PortManager();
 
-    const port1 = new MockMessagePort() as any;
-    const port2 = new MockMessagePort() as any;
+    const port1 = new MockMessagePort() as unknown as MessagePort;
+    const port2 = new MockMessagePort() as unknown as MessagePort;
 
     portManager.handleConnect(port1);
     portManager.handleConnect(port2);
@@ -119,16 +126,16 @@ describe('PortManager', () => {
     const onLog = vi.fn();
     portManager = new PortManager({ pingInterval: 5000, onLog });
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     // Clear initial messages
-    (mockPort as any).lastMessage = null;
+    (mockPort as unknown as MessagePort).lastMessage = null;
 
     // Advance time to trigger ping
     vi.advanceTimersByTime(5000);
 
-    expect((mockPort as any).lastMessage).toEqual({ type: 'ping' });
+    expect((mockPort as unknown as MessagePort).lastMessage).toEqual({ type: 'ping' });
     expect(onLog).toHaveBeenCalledWith('[PortManager] Sending ping to client');
   });
 
@@ -136,8 +143,8 @@ describe('PortManager', () => {
     const onLog = vi.fn();
     portManager = new PortManager({ onLog });
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     mockPort.simulateMessage({ type: 'pong' });
 
@@ -151,8 +158,8 @@ describe('PortManager', () => {
 
     portManager = new PortManager({ pingInterval, pingTimeout, onLog });
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     expect(portManager.getTotalCount()).toBe(1);
 
@@ -174,8 +181,8 @@ describe('PortManager', () => {
 
     portManager = new PortManager({ pingInterval, pingTimeout });
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     // Advance to first ping
     vi.advanceTimersByTime(pingInterval);
@@ -196,8 +203,8 @@ describe('PortManager', () => {
     const pingTimeout = 2000;
     portManager = new PortManager({ pingInterval, pingTimeout, onLog });
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     // Advance to first ping, then past timeout and to next check to remove client
     vi.advanceTimersByTime(pingInterval);
@@ -216,8 +223,8 @@ describe('PortManager', () => {
     const onActiveCountChange = vi.fn();
     portManager = new PortManager({ onActiveCountChange });
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     expect(onActiveCountChange).toHaveBeenCalledWith(1, 1);
 
@@ -230,8 +237,8 @@ describe('PortManager', () => {
     const onMessage = vi.fn();
     portManager = new PortManager({ onMessage });
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     const customMessage = { type: 'custom', data: 'test' };
     mockPort.simulateMessage(customMessage);
@@ -242,8 +249,8 @@ describe('PortManager', () => {
   it('should clean up on destroy', () => {
     portManager = new PortManager();
 
-    mockPort = new MockMessagePort() as any;
-    portManager.handleConnect(mockPort as any);
+    mockPort = new MockMessagePort() as unknown as MessagePort;
+    portManager.handleConnect(mockPort as unknown as MessagePort);
 
     portManager.destroy();
 

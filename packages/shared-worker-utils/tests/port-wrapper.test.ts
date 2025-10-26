@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PortWrapper } from '../src/port-wrapper';
 
+// Test message type
+interface TestMessage {
+  type: string;
+  data?: string;
+}
+
 // Mock MessagePort for SharedWorker
 class MockPort {
   onmessage: ((event: MessageEvent) => void) | null = null;
-  private messages: any[] = [];
+  private messages: unknown[] = [];
 
-  postMessage(data: any) {
+  postMessage(data: unknown) {
     this.messages.push(data);
   }
 
@@ -25,7 +31,7 @@ class MockPort {
   }
 
   // Test helper to simulate receiving a message
-  simulateMessage(data: any) {
+  simulateMessage(data: unknown) {
     if (this.onmessage) {
       this.onmessage({ data } as MessageEvent);
     }
@@ -69,13 +75,13 @@ const mockWindow = {
 
 describe('PortWrapper', () => {
   let mockWorker: MockSharedWorker;
-  let portWrapper: PortWrapper;
+  let portWrapper: PortWrapper<TestMessage>;
 
   beforeEach(() => {
     mockWorker = new MockSharedWorker();
     // Override global document and window
-    (global as any).document = mockDocument;
-    (global as any).window = mockWindow;
+    (global as unknown as { document: typeof mockDocument }).document = mockDocument;
+    (global as unknown as { window: typeof mockWindow }).window = mockWindow;
     mockDocument.hidden = false;
     mockDocument.listeners.clear();
     mockWindow.listeners.clear();
@@ -85,7 +91,7 @@ describe('PortWrapper', () => {
     const onMessage = vi.fn();
     const onLog = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage, onLog });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage, onLog });
 
     expect(onLog).toHaveBeenCalledWith('[PortWrapper] Connected to SharedWorker');
     expect(onLog).toHaveBeenCalledWith('[PortWrapper] Tab visibility: visible');
@@ -95,7 +101,7 @@ describe('PortWrapper', () => {
     mockDocument.hidden = true;
     const onMessage = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage });
 
     expect(portWrapper.isVisible()).toBe(false);
   });
@@ -104,7 +110,7 @@ describe('PortWrapper', () => {
     const onMessage = vi.fn();
     const onLog = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage, onLog });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage, onLog });
 
     mockWorker.port.simulateMessage({ type: 'ping' });
 
@@ -118,7 +124,7 @@ describe('PortWrapper', () => {
   it('should pass non-internal messages to onMessage callback', () => {
     const onMessage = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage });
 
     const testMessage = { type: 'test', data: 'hello' };
     mockWorker.port.simulateMessage(testMessage);
@@ -129,7 +135,7 @@ describe('PortWrapper', () => {
   it('should filter out internal messages', () => {
     const onMessage = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage });
 
     // Send various internal messages
     mockWorker.port.simulateMessage({ type: 'ping' });
@@ -145,7 +151,7 @@ describe('PortWrapper', () => {
   it('should send messages via send()', () => {
     const onMessage = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage });
 
     const testMessage = { type: 'custom', data: 'test' };
     portWrapper.send(testMessage);
@@ -158,7 +164,7 @@ describe('PortWrapper', () => {
     const onMessage = vi.fn();
     const onLog = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage, onLog });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage, onLog });
 
     // Clear initial messages
     mockWorker.port.getAllMessages().length = 0;
@@ -180,7 +186,7 @@ describe('PortWrapper', () => {
     const onMessage = vi.fn();
     const onLog = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage, onLog });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage, onLog });
 
     expect(portWrapper.isVisible()).toBe(false);
 
@@ -202,7 +208,7 @@ describe('PortWrapper', () => {
   it('should not send visibility change if visibility does not actually change', () => {
     const onMessage = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage });
 
     const initialMessageCount = mockWorker.port.getAllMessages().length;
 
@@ -215,7 +221,7 @@ describe('PortWrapper', () => {
   it('should send disconnect message on beforeunload', () => {
     const onMessage = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage });
 
     mockWindow.simulateBeforeUnload();
 
@@ -226,7 +232,7 @@ describe('PortWrapper', () => {
   it('should send disconnect message when disconnect() is called', () => {
     const onMessage = vi.fn();
 
-    portWrapper = new PortWrapper(mockWorker as any, { onMessage });
+    portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage });
 
     portWrapper.disconnect();
 
@@ -238,7 +244,7 @@ describe('PortWrapper', () => {
     const onMessage = vi.fn();
 
     expect(() => {
-      portWrapper = new PortWrapper(mockWorker as any, { onMessage });
+      portWrapper = new PortWrapper(mockWorker as unknown as SharedWorker, { onMessage });
     }).not.toThrow();
   });
 });

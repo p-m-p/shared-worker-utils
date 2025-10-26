@@ -1,4 +1,4 @@
-export interface PortManagerOptions {
+export interface PortManagerOptions<TMessage = unknown> {
   /**
    * Interval between ping messages in milliseconds
    * @default 10000
@@ -20,25 +20,25 @@ export interface PortManagerOptions {
    * Callback for non-internal messages from clients
    * Internal messages (ping, pong, visibility-change, disconnect, client-count) are filtered out
    */
-  onMessage?: (port: MessagePort, message: any) => void;
+  onMessage?: (port: MessagePort, message: TMessage) => void;
 
   /**
    * Callback for internal logging
    */
-  onLog?: (message: string, ...args: any[]) => void;
+  onLog?: (message: string, ...args: unknown[]) => void;
 }
 
-export interface PortWrapperOptions {
+export interface PortWrapperOptions<TMessage = unknown> {
   /**
    * Callback for non-internal messages from SharedWorker
    * Internal messages (ping, pong, visibility-change, disconnect, client-count) are filtered out
    */
-  onMessage: (message: any) => void;
+  onMessage: (message: TMessage) => void;
 
   /**
    * Callback for internal logging
    */
-  onLog?: (message: string, ...args: any[]) => void;
+  onLog?: (message: string, ...args: unknown[]) => void;
 }
 
 export interface ClientState {

@@ -4,17 +4,20 @@ import { PortManager } from 'shared-worker-utils';
 // Declare SharedWorker global
 declare const self: SharedWorkerGlobalScope;
 
+// Define message types for application messages
+type AppMessage = never; // No application messages from clients in this example
+
 let socket: WebSocket | null = null;
 const WEBSOCKET_URL = "ws://localhost:8080";
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 const RECONNECT_DELAY = 3000;
 
-function log(message: string, ...args: any[]) {
+function log(message: string, ...args: unknown[]) {
   console.log(message, ...args);
 }
 
-// Initialize PortManager
-const portManager = new PortManager({
+// Initialize PortManager with typed messages
+const portManager = new PortManager<AppMessage>({
   pingInterval: 10000,
   pingTimeout: 5000,
   onActiveCountChange: (activeCount, totalCount) => {

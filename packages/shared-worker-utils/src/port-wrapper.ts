@@ -3,14 +3,15 @@ import type { PortWrapperOptions } from './types';
 /**
  * Wraps a SharedWorker port connection on the client side
  * Handles visibility tracking, ping/pong responses, and cleanup
+ * @template TMessage - The type of application messages (non-internal messages)
  */
-export class PortWrapper {
+export class PortWrapper<TMessage = unknown> {
   private port: MessagePort;
-  private onMessage: (message: any) => void;
-  private onLog?: (message: string, ...args: any[]) => void;
+  private onMessage: (message: TMessage) => void;
+  private onLog?: (message: string, ...args: unknown[]) => void;
   private isTabVisible: boolean;
 
-  constructor(worker: SharedWorker, options: PortWrapperOptions) {
+  constructor(worker: SharedWorker, options: PortWrapperOptions<TMessage>) {
     this.port = worker.port;
     this.onMessage = options.onMessage;
     this.onLog = options.onLog;
@@ -29,7 +30,7 @@ export class PortWrapper {
   /**
    * Send a message to the SharedWorker
    */
-  send(message: any): void {
+  send(message: unknown): void {
     this.port.postMessage(message);
   }
 
@@ -49,7 +50,8 @@ export class PortWrapper {
 
   private setupMessageHandler(): void {
     this.port.onmessage = (event) => {
-      const message = event.data;
+      const data: unknown = event.data;
+      const message = data as { type?: string };
 
       // Handle internal ping messages
       if (message.type === 'ping') {
@@ -59,12 +61,12 @@ export class PortWrapper {
       }
 
       // Filter out other internal messages
-      if (this.isInternalMessage(message.type)) {
+      if (message.type && this.isInternalMessage(message.type)) {
         return;
       }
 
       // Pass non-internal messages to the consumer
-      this.onMessage(message);
+      this.onMessage(data as TMessage);
     };
   }
 
@@ -98,7 +100,7 @@ export class PortWrapper {
     });
   }
 
-  private log(message: string, ...args: any[]): void {
+  private log(message: string, ...args: unknown[]): void {
     this.onLog?.(`[PortWrapper] ${message}`, ...args);
   }
 }

@@ -17,6 +17,12 @@ interface StockData {
   timestamp: string;
 }
 
+// Define message types from SharedWorker
+type WorkerMessage =
+  | { type: "connection-status"; status: string }
+  | { type: "stock-update"; data: StockData[] }
+  | { type: "client-info"; total: number; active: number };
+
 let currentStockData: StockData[] = [];
 
 // Update connection status UI
@@ -75,7 +81,7 @@ const worker = new SharedWorker(
   { type: "module" },
 );
 
-const portWrapper = new PortWrapper(worker, {
+const portWrapper = new PortWrapper<WorkerMessage>(worker, {
   onMessage: (message) => {
     switch (message.type) {
       case "connection-status":

@@ -3,17 +3,18 @@ import type { PortManagerOptions, ClientState } from './types';
 /**
  * Manages MessagePort connections in a SharedWorker
  * Handles ping/pong heartbeat, visibility tracking, and message broadcasting
+ * @template TMessage - The type of application messages (non-internal messages)
  */
-export class PortManager {
+export class PortManager<TMessage = unknown> {
   private clients: Map<MessagePort, ClientState> = new Map();
   private pingInterval: number;
   private pingTimeout: number;
   private onActiveCountChange?: (activeCount: number, totalCount: number) => void;
-  private onMessage?: (port: MessagePort, message: any) => void;
-  private onLog?: (message: string, ...args: any[]) => void;
+  private onMessage?: (port: MessagePort, message: TMessage) => void;
+  private onLog?: (message: string, ...args: unknown[]) => void;
   private pingIntervalId: ReturnType<typeof setInterval>;
 
-  constructor(options: PortManagerOptions = {}) {
+  constructor(options: PortManagerOptions<TMessage> = {}) {
     this.pingInterval = options.pingInterval ?? 10000;
     this.pingTimeout = options.pingTimeout ?? 5000;
     this.onActiveCountChange = options.onActiveCountChange;
@@ -45,7 +46,7 @@ export class PortManager {
   /**
    * Broadcast a message to all connected clients
    */
-  broadcast(message: any): void {
+  broadcast(message: unknown): void {
     for (const [port] of this.clients) {
       port.postMessage(message);
     }
@@ -69,7 +70,7 @@ export class PortManager {
     return this.clients.size;
   }
 
-  private handleMessage(port: MessagePort, data: any): void {
+  private handleMessage(port: MessagePort, data: unknown): void {
     let client = this.clients.get(port);
 
     // Re-add client if it was removed (e.g., after computer sleep)
@@ -80,20 +81,23 @@ export class PortManager {
       this.updateClientCount();
     }
 
-    if (data.type === 'visibility-change') {
-      client.visible = data.visible;
-      this.log(`Client visibility changed: ${data.visible}`);
+    // Type guard for internal messages
+    const message = data as { type?: string; visible?: boolean };
+
+    if (message.type === 'visibility-change') {
+      client.visible = message.visible ?? true;
+      this.log(`Client visibility changed: ${message.visible}`);
       this.updateClientCount();
-    } else if (data.type === 'disconnect') {
+    } else if (message.type === 'disconnect') {
       this.clients.delete(port);
       this.log(`Client disconnected. Remaining clients: ${this.clients.size}`);
       this.updateClientCount();
-    } else if (data.type === 'pong') {
+    } else if (message.type === 'pong') {
       client.lastPong = Date.now();
       this.log('Received pong from client');
     } else {
       // Non-internal message - pass through to application
-      this.onMessage?.(port, data);
+      this.onMessage?.(port, data as TMessage);
     }
   }
 
@@ -138,7 +142,7 @@ export class PortManager {
     this.onActiveCountChange?.(activeCount, totalCount);
   }
 
-  private log(message: string, ...args: any[]): void {
+  private log(message: string, ...args: unknown[]): void {
     this.onLog?.(`[PortManager] ${message}`, ...args);
   }
 
