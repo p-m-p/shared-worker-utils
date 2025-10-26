@@ -78,6 +78,7 @@ function updateStockTable(stocks: StockData[]) {
 // Connect to SharedWorker using SharedWorkerClient
 const worker = new SharedWorker(new URL('shared-worker.ts', import.meta.url), {
   type: 'module',
+  name: 'stock-websocket-worker',
 })
 
 const portWrapper = new SharedWorkerClient<WorkerMessage>(worker, {
