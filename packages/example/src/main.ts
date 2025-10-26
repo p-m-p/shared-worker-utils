@@ -1,5 +1,5 @@
 import "./style.css";
-import { PortWrapper } from "shared-worker-utils";
+import { SharedWorkerClient } from "shared-worker-utils";
 
 // DOM elements
 const connectionStatus = document.getElementById("connection-status")!;
@@ -75,13 +75,13 @@ function updateStockTable(stocks: StockData[]) {
   });
 }
 
-// Connect to SharedWorker using PortWrapper
+// Connect to SharedWorker using SharedWorkerClient
 const worker = new SharedWorker(
   new URL("./shared-worker.ts", import.meta.url),
   { type: "module" },
 );
 
-const portWrapper = new PortWrapper<WorkerMessage>(worker, {
+const portWrapper = new SharedWorkerClient<WorkerMessage>(worker, {
   onMessage: (message) => {
     switch (message.type) {
       case "connection-status":

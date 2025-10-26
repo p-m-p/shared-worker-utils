@@ -92,7 +92,7 @@ Open the application in your browser (typically `http://localhost:5173`)
 - Broadcasts server messages to all connected clients
 
 ### Client (`src/main.ts`)
-- Uses `PortWrapper` from `shared-worker-utils` to connect to SharedWorker
+- Uses `SharedWorkerClient` from `shared-worker-utils` to connect to SharedWorker
 - Displays real-time stock prices in a table
 - Pauses table updates when tab is not visible
 - Shows connection status, client count, and visibility state
@@ -102,7 +102,7 @@ Open the application in your browser (typically `http://localhost:5173`)
 ### Connection Flow
 
 1. **First Tab Opens**
-   - Client connects to SharedWorker via PortWrapper
+   - Client connects to SharedWorker via SharedWorkerClient
    - PortManager registers the client
    - SharedWorker creates WebSocket connection to server
    - Server sends initial stock data
@@ -115,7 +115,7 @@ Open the application in your browser (typically `http://localhost:5173`)
 
 3. **Tab Becomes Hidden**
    - Page Visibility API detects tab is backgrounded
-   - PortWrapper sends visibility-change message
+   - SharedWorkerClient sends visibility-change message
    - PortManager updates client count
    - Table updates are paused (data still received, just not rendered)
 
@@ -125,20 +125,20 @@ Open the application in your browser (typically `http://localhost:5173`)
    - Server logs client disconnect
 
 5. **Tab Becomes Visible Again**
-   - PortWrapper detects visibility change
+   - SharedWorkerClient detects visibility change
    - PortManager updates client count
    - SharedWorker re-establishes WebSocket connection
    - All tabs receive updates again
 
 6. **Last Tab Closes**
-   - PortWrapper sends disconnect message
+   - SharedWorkerClient sends disconnect message
    - PortManager removes client
    - WebSocket connection is closed
 
 ### Message Flow
 
 ```
-Server → WebSocket → SharedWorker → PortManager → MessagePort → PortWrapper → Client
+Server → WebSocket → SharedWorker → PortManager → MessagePort → SharedWorkerClient → Client
 ```
 
 All clients receive the same messages simultaneously from the SharedWorker.

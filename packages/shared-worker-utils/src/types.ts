@@ -28,7 +28,7 @@ export interface PortManagerOptions<TMessage = unknown> {
   onLog?: (message: string, ...args: unknown[]) => void;
 }
 
-export interface PortWrapperOptions<TMessage = unknown> {
+export interface SharedWorkerClientOptions<TMessage = unknown> {
   /**
    * Callback for non-internal messages from SharedWorker
    * Internal messages (ping, pong, visibility-change, disconnect, client-count) are filtered out

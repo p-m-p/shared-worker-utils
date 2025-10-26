@@ -1,17 +1,17 @@
-import type { PortWrapperOptions } from './types';
+import type { SharedWorkerClientOptions } from './types';
 
 /**
- * Wraps a SharedWorker port connection on the client side
+ * Client-side SharedWorker connection manager
  * Handles visibility tracking, ping/pong responses, and cleanup
  * @template TMessage - The type of application messages (non-internal messages)
  */
-export class PortWrapper<TMessage = unknown> {
+export class SharedWorkerClient<TMessage = unknown> {
   private port: MessagePort;
   private onMessage: (message: TMessage) => void;
   private onLog?: (message: string, ...args: unknown[]) => void;
   private isTabVisible: boolean;
 
-  constructor(worker: SharedWorker, options: PortWrapperOptions<TMessage>) {
+  constructor(worker: SharedWorker, options: SharedWorkerClientOptions<TMessage>) {
     this.port = worker.port;
     this.onMessage = options.onMessage;
     this.onLog = options.onLog;
@@ -101,6 +101,6 @@ export class PortWrapper<TMessage = unknown> {
   }
 
   private log(message: string, ...args: unknown[]): void {
-    this.onLog?.(`[PortWrapper] ${message}`, ...args);
+    this.onLog?.(`[SharedWorkerClient] ${message}`, ...args);
   }
 }

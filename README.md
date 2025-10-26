@@ -58,7 +58,7 @@ self.onconnect = (event) => {
 ### Client Side
 
 ```typescript
-import { PortWrapper } from 'shared-worker-utils';
+import { SharedWorkerClient } from 'shared-worker-utils';
 
 type WorkerMessage = { type: 'update'; data: string };
 
@@ -67,7 +67,7 @@ const worker = new SharedWorker(
   { type: 'module' }
 );
 
-const wrapper = new PortWrapper<WorkerMessage>(worker, {
+const client = new SharedWorkerClient<WorkerMessage>(worker, {
   onMessage: (message) => {
     // message is typed as WorkerMessage
     console.log('Update:', message.data);
@@ -75,7 +75,7 @@ const wrapper = new PortWrapper<WorkerMessage>(worker, {
 });
 
 // Send messages
-wrapper.send({ type: 'request', id: '123' });
+client.send({ type: 'request', id: '123' });
 ```
 
 ## What's Included
@@ -89,7 +89,7 @@ Manages MessagePort connections on the SharedWorker side with:
 - Message broadcasting to all clients
 - Automatic reconnection after computer sleep/wake
 
-### PortWrapper
+### SharedWorkerClient
 
 Wraps SharedWorker connections on the client side with:
 - Automatic visibility detection using Page Visibility API
@@ -139,7 +139,7 @@ Then open http://localhost:5173 in multiple tabs!
 - `getTotalCount(): number` - Get count of all connected clients
 - `destroy(): void` - Clean up resources
 
-### PortWrapper<TMessage>
+### SharedWorkerClient<TMessage>
 
 **Constructor Options:**
 - `onMessage: (message: TMessage) => void` - Callback for non-internal messages (required)

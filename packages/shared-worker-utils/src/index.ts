@@ -1,8 +1,8 @@
 export { PortManager } from './port-manager';
-export { PortWrapper } from './port-wrapper';
+export { SharedWorkerClient } from './shared-worker-client';
 export type {
   PortManagerOptions,
-  PortWrapperOptions,
+  SharedWorkerClientOptions,
   ClientState,
   ClientCountMessage,
   VisibilityChangeMessage,

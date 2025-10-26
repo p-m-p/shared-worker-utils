@@ -14,7 +14,10 @@
       "Bash(git push:*)",
       "Bash(pnpm remove:*)",
       "Bash(pnpm lint:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(pnpm changeset:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

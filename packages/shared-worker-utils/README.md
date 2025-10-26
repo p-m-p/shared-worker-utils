@@ -10,7 +10,7 @@ Utilities for managing SharedWorker port connections with ping/pong heartbeat an
   - Automatic reconnection after sleep/wake cycles
   - Message broadcasting to all clients
 
-- **PortWrapper**: Wraps a SharedWorker connection on the client side
+- **SharedWorkerClient**: Wraps a SharedWorker connection on the client side
   - Automatic visibility change detection
   - Automatic ping/pong responses
   - Clean disconnect on page unload
@@ -80,7 +80,7 @@ const activeClients = portManager.getActiveCount();
 ### Client Side
 
 ```typescript
-import { PortWrapper } from 'shared-worker-utils';
+import { SharedWorkerClient } from 'shared-worker-utils';
 
 // Define message types from SharedWorker
 type WorkerMessage =
@@ -92,7 +92,7 @@ const worker = new SharedWorker(
   { type: 'module' }
 );
 
-const wrapper = new PortWrapper<WorkerMessage>(worker, {
+const client = new SharedWorkerClient<WorkerMessage>(worker, {
   onMessage: (message) => {
     // message is typed as WorkerMessage
     // Internal messages (ping, pong, client-count, visibility-change, disconnect) are filtered out
@@ -111,15 +111,15 @@ const wrapper = new PortWrapper<WorkerMessage>(worker, {
 });
 
 // Send custom messages
-wrapper.send({ type: 'custom', data: 'hello' });
+client.send({ type: 'custom', data: 'hello' });
 
 // Check visibility
-if (wrapper.isVisible()) {
+if (client.isVisible()) {
   // Tab is visible
 }
 
 // Manually disconnect
-wrapper.disconnect();
+client.disconnect();
 ```
 
 ## API
@@ -166,20 +166,20 @@ PortManager automatically handles these message types:
 
 #### Automatic Internal Messages
 
-These messages are sent by PortManager but are filtered out by PortWrapper and not passed to application code:
+These messages are sent by PortManager but are filtered out by SharedWorkerClient and not passed to application code:
 - `ping` - Heartbeat message sent at `pingInterval`
 - `client-count` - Sent when client counts change: `{ type: 'client-count', total: number, active: number }`
 
 **Note**: If your application needs client count information, use the `onActiveCountChange` callback in PortManager to send a custom application message.
 
-### PortWrapper
+### SharedWorkerClient
 
-`PortWrapper<TMessage = unknown>` - Generic type parameter for application messages from SharedWorker.
+`SharedWorkerClient<TMessage = unknown>` - Generic type parameter for application messages from SharedWorker.
 
 #### Constructor Options
 
 ```typescript
-interface PortWrapperOptions<TMessage = unknown> {
+interface SharedWorkerClientOptions<TMessage = unknown> {
   /** Callback for non-internal messages from SharedWorker */
   onMessage: (message: TMessage) => void;
 
@@ -196,7 +196,7 @@ interface PortWrapperOptions<TMessage = unknown> {
 
 #### Automatic Behavior
 
-PortWrapper automatically:
+SharedWorkerClient automatically:
 - Responds to `ping` messages with `pong`
 - Sends `visibility-change` messages when tab visibility changes
 - Sends `disconnect` message on `beforeunload`
@@ -217,7 +217,7 @@ For example, with `pingInterval: 10000` and `pingTimeout: 5000`:
 
 ### Visibility Tracking
 
-PortWrapper uses the Page Visibility API to track when tabs are hidden/visible. This information is automatically sent to the SharedWorker, allowing you to:
+SharedWorkerClient uses the Page Visibility API to track when tabs are hidden/visible. This information is automatically sent to the SharedWorker, allowing you to:
 - Pause expensive operations when no tabs are visible
 - Resume when a tab becomes visible
 - Get accurate counts of active (visible) clients
@@ -226,7 +226,7 @@ PortWrapper uses the Page Visibility API to track when tabs are hidden/visible. 
 
 When a computer sleeps:
 1. PortManager's ping/pong may timeout and remove "stale" clients
-2. When computer wakes, clients send messages (pong, visibility-change, etc.)
+2. When computer wakes, SharedWorkerClient instances send messages (pong, visibility-change, etc.)
 3. PortManager detects missing client and re-adds it automatically
 4. Everything resumes normally
 
