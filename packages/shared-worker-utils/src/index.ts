@@ -1,5 +1,5 @@
-export { PortManager } from './port-manager';
-export { SharedWorkerClient } from './shared-worker-client';
+export { PortManager } from './port-manager'
+export { SharedWorkerClient } from './shared-worker-client'
 export type {
   PortManagerOptions,
   SharedWorkerClientOptions,
@@ -10,4 +10,4 @@ export type {
   PingMessage,
   PongMessage,
   InternalMessage,
-} from './types';
+} from './types'

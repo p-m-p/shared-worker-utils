@@ -17,7 +17,8 @@
       "Bash(git restore:*)",
       "Bash(pnpm changeset:*)",
       "Bash(git pull:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(pnpm format:*)"
     ],
     "deny": [],
     "ask": []

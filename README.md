@@ -34,48 +34,47 @@ yarn add shared-worker-utils
 ### SharedWorker Side
 
 ```typescript
-import { PortManager } from 'shared-worker-utils';
+import { PortManager } from 'shared-worker-utils'
 
 // Define your message types for type safety
-type ClientMessage = { type: 'request'; id: string };
+type ClientMessage = { type: 'request'; id: string }
 
 const portManager = new PortManager<ClientMessage>({
   onActiveCountChange: (activeCount, totalCount) => {
-    console.log(`Active clients: ${activeCount}/${totalCount}`);
+    console.log(`Active clients: ${activeCount}/${totalCount}`)
   },
   onMessage: (port, message) => {
     // Handle application messages from clients
-    console.log('Received:', message);
+    console.log('Received:', message)
   },
-});
+})
 
 // Handle new connections
 self.onconnect = (event) => {
-  portManager.handleConnect(event.ports[0]);
-};
+  portManager.handleConnect(event.ports[0])
+}
 ```
 
 ### Client Side
 
 ```typescript
-import { SharedWorkerClient } from 'shared-worker-utils';
+import { SharedWorkerClient } from 'shared-worker-utils'
 
-type WorkerMessage = { type: 'update'; data: string };
+type WorkerMessage = { type: 'update'; data: string }
 
-const worker = new SharedWorker(
-  new URL('./my-worker.ts', import.meta.url),
-  { type: 'module' }
-);
+const worker = new SharedWorker(new URL('./my-worker.ts', import.meta.url), {
+  type: 'module',
+})
 
 const client = new SharedWorkerClient<WorkerMessage>(worker, {
   onMessage: (message) => {
     // message is typed as WorkerMessage
-    console.log('Update:', message.data);
+    console.log('Update:', message.data)
   },
-});
+})
 
 // Send messages
-client.send({ type: 'request', id: '123' });
+client.send({ type: 'request', id: '123' })
 ```
 
 ## What's Included
@@ -83,6 +82,7 @@ client.send({ type: 'request', id: '123' });
 ### PortManager
 
 Manages MessagePort connections on the SharedWorker side with:
+
 - Automatic ping/pong heartbeat to detect disconnected clients
 - Visibility state tracking for all connected tabs
 - Client count management (total and active)
@@ -92,6 +92,7 @@ Manages MessagePort connections on the SharedWorker side with:
 ### SharedWorkerClient
 
 Wraps SharedWorker connections on the client side with:
+
 - Automatic visibility detection using Page Visibility API
 - Automatic ping/pong responses
 - Clean disconnect handling on page unload
@@ -126,6 +127,7 @@ Then open http://localhost:5173 in multiple tabs!
 ### PortManager<TMessage>
 
 **Constructor Options:**
+
 - `pingInterval?: number` - Interval between ping messages (default: 10000ms)
 - `pingTimeout?: number` - Max time to wait for pong response (default: 5000ms)
 - `onActiveCountChange?: (activeCount: number, totalCount: number) => void` - Callback when client counts change
@@ -133,6 +135,7 @@ Then open http://localhost:5173 in multiple tabs!
 - `onLog?: (message: string, ...args: unknown[]) => void` - Callback for internal logging
 
 **Methods:**
+
 - `handleConnect(port: MessagePort): void` - Handle a new port connection
 - `broadcast(message: unknown): void` - Broadcast a message to all clients
 - `getActiveCount(): number` - Get count of visible clients
@@ -142,10 +145,12 @@ Then open http://localhost:5173 in multiple tabs!
 ### SharedWorkerClient<TMessage>
 
 **Constructor Options:**
+
 - `onMessage: (message: TMessage) => void` - Callback for non-internal messages (required)
 - `onLog?: (message: string, ...args: unknown[]) => void` - Callback for internal logging
 
 **Methods:**
+
 - `send(message: unknown): void` - Send a message to the SharedWorker
 - `disconnect(): void` - Disconnect from the SharedWorker
 - `isVisible(): boolean` - Check if the tab is currently visible
@@ -155,11 +160,13 @@ Then open http://localhost:5173 in multiple tabs!
 ## Browser Support
 
 SharedWorker is supported in:
+
 - ✅ Chrome/Edge 4+
 - ✅ Firefox 29+
 - ✅ Safari 16+
 
 Not supported in:
+
 - ❌ Internet Explorer
 - ❌ Mobile Safari (iOS)
 - ❌ Chrome on iOS (uses Safari engine)
@@ -169,6 +176,7 @@ Not supported in:
 This is a monorepo containing the library and example application.
 
 **Commands:**
+
 ```bash
 pnpm install     # Install dependencies
 pnpm test        # Run tests
@@ -179,6 +187,7 @@ pnpm server      # Start WebSocket server for example
 ```
 
 **Project Structure:**
+
 ```
 packages/
 ├── shared-worker-utils/  # NPM package

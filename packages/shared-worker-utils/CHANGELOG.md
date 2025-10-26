@@ -5,7 +5,6 @@
 ### Minor Changes
 
 - 14eba0b: Add TypeScript generic type support and improve type safety
-
   - Added generic type parameters to `PortManager<TMessage>` and `PortWrapper<TMessage>` for type-safe message handling
   - Replaced all `any` types with `unknown` or typed generics
   - Renamed `onCustomMessage` to `onMessage` for clarity

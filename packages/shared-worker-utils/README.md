@@ -30,18 +30,18 @@ yarn add shared-worker-utils
 ### SharedWorker Side
 
 ```typescript
-import { PortManager } from 'shared-worker-utils';
+import { PortManager } from 'shared-worker-utils'
 
 // Define your application message types
 type ClientMessage =
   | { type: 'request-data'; id: string }
-  | { type: 'custom-action'; payload: unknown };
+  | { type: 'custom-action'; payload: unknown }
 
 const portManager = new PortManager<ClientMessage>({
-  pingInterval: 10000,  // Send ping every 10 seconds
-  pingTimeout: 5000,    // Expect pong within 5 seconds of ping
+  pingInterval: 10000, // Send ping every 10 seconds
+  pingTimeout: 5000, // Expect pong within 5 seconds of ping
   onActiveCountChange: (activeCount, totalCount) => {
-    console.log(`Active clients: ${activeCount}/${totalCount}`);
+    console.log(`Active clients: ${activeCount}/${totalCount}`)
     // Manage your resources based on active clients
     if (activeCount === 0) {
       // Pause expensive operations
@@ -52,45 +52,44 @@ const portManager = new PortManager<ClientMessage>({
   onMessage: (port, message) => {
     // message is typed as ClientMessage - internal messages filtered out
     if (message.type === 'request-data') {
-      console.log('Data requested:', message.id);
+      console.log('Data requested:', message.id)
     }
   },
   onLog: (message, ...args) => {
-    console.log(message, ...args);
+    console.log(message, ...args)
   },
-});
+})
 
 // Handle new connections
 onconnect = (event) => {
-  const port = event.ports[0];
-  portManager.handleConnect(port);
+  const port = event.ports[0]
+  portManager.handleConnect(port)
 
   // Optionally send initial data to the client
-  port.postMessage({ type: 'welcome', data: 'Hello!' });
-};
+  port.postMessage({ type: 'welcome', data: 'Hello!' })
+}
 
 // Broadcast to all clients
-portManager.broadcast({ type: 'update', data: someData });
+portManager.broadcast({ type: 'update', data: someData })
 
 // Get client counts
-const totalClients = portManager.getTotalCount();
-const activeClients = portManager.getActiveCount();
+const totalClients = portManager.getTotalCount()
+const activeClients = portManager.getActiveCount()
 ```
 
 ### Client Side
 
 ```typescript
-import { SharedWorkerClient } from 'shared-worker-utils';
+import { SharedWorkerClient } from 'shared-worker-utils'
 
 // Define message types from SharedWorker
 type WorkerMessage =
   | { type: 'update'; data: string }
-  | { type: 'welcome'; data: string };
+  | { type: 'welcome'; data: string }
 
-const worker = new SharedWorker(
-  new URL('./my-worker.ts', import.meta.url),
-  { type: 'module' }
-);
+const worker = new SharedWorker(new URL('./my-worker.ts', import.meta.url), {
+  type: 'module',
+})
 
 const client = new SharedWorkerClient<WorkerMessage>(worker, {
   onMessage: (message) => {
@@ -98,20 +97,20 @@ const client = new SharedWorkerClient<WorkerMessage>(worker, {
     // Internal messages (ping, pong, client-count, visibility-change, disconnect) are filtered out
     switch (message.type) {
       case 'update':
-        console.log('Update:', message.data);
-        break;
+        console.log('Update:', message.data)
+        break
       case 'welcome':
-        console.log('Welcome message:', message.data);
-        break;
+        console.log('Welcome message:', message.data)
+        break
     }
   },
   onLog: (message, ...args) => {
-    console.log(message, ...args);
+    console.log(message, ...args)
   },
-});
+})
 
 // Send custom messages
-client.send({ type: 'custom', data: 'hello' });
+client.send({ type: 'custom', data: 'hello' })
 
 // Check visibility
 if (client.isVisible()) {
@@ -119,7 +118,7 @@ if (client.isVisible()) {
 }
 
 // Manually disconnect
-client.disconnect();
+client.disconnect()
 ```
 
 ## API
@@ -133,19 +132,19 @@ client.disconnect();
 ```typescript
 interface PortManagerOptions<TMessage = unknown> {
   /** Interval between ping messages in milliseconds (default: 10000) */
-  pingInterval?: number;
+  pingInterval?: number
 
   /** Maximum time to wait for pong response after ping in milliseconds (default: 5000) */
-  pingTimeout?: number;
+  pingTimeout?: number
 
   /** Callback when active or total client count changes */
-  onActiveCountChange?: (activeCount: number, totalCount: number) => void;
+  onActiveCountChange?: (activeCount: number, totalCount: number) => void
 
   /** Callback for non-internal messages from clients */
-  onMessage?: (port: MessagePort, message: TMessage) => void;
+  onMessage?: (port: MessagePort, message: TMessage) => void
 
   /** Callback for internal logging */
-  onLog?: (message: string, ...args: unknown[]) => void;
+  onLog?: (message: string, ...args: unknown[]) => void
 }
 ```
 
@@ -160,6 +159,7 @@ interface PortManagerOptions<TMessage = unknown> {
 #### Internal Messages Handled
 
 PortManager automatically handles these message types:
+
 - `visibility-change` - Client visibility state changed
 - `disconnect` - Client is disconnecting
 - `pong` - Response to ping heartbeat
@@ -167,6 +167,7 @@ PortManager automatically handles these message types:
 #### Automatic Internal Messages
 
 These messages are sent by PortManager but are filtered out by SharedWorkerClient and not passed to application code:
+
 - `ping` - Heartbeat message sent at `pingInterval`
 - `client-count` - Sent when client counts change: `{ type: 'client-count', total: number, active: number }`
 
@@ -181,10 +182,10 @@ These messages are sent by PortManager but are filtered out by SharedWorkerClien
 ```typescript
 interface SharedWorkerClientOptions<TMessage = unknown> {
   /** Callback for non-internal messages from SharedWorker */
-  onMessage: (message: TMessage) => void;
+  onMessage: (message: TMessage) => void
 
   /** Callback for internal logging */
-  onLog?: (message: string, ...args: unknown[]) => void;
+  onLog?: (message: string, ...args: unknown[]) => void
 }
 ```
 
@@ -197,6 +198,7 @@ interface SharedWorkerClientOptions<TMessage = unknown> {
 #### Automatic Behavior
 
 SharedWorkerClient automatically:
+
 - Responds to `ping` messages with `pong`
 - Sends `visibility-change` messages when tab visibility changes
 - Sends `disconnect` message on `beforeunload`
@@ -211,6 +213,7 @@ The PortManager sends ping messages at the specified `pingInterval`. Each client
 The staleness check is: `now - lastPong > pingInterval + pingTimeout`
 
 For example, with `pingInterval: 10000` and `pingTimeout: 5000`:
+
 - Ping sent every 10 seconds
 - Client must respond within 5 seconds
 - Client removed if no pong for 15 seconds total
@@ -218,6 +221,7 @@ For example, with `pingInterval: 10000` and `pingTimeout: 5000`:
 ### Visibility Tracking
 
 SharedWorkerClient uses the Page Visibility API to track when tabs are hidden/visible. This information is automatically sent to the SharedWorker, allowing you to:
+
 - Pause expensive operations when no tabs are visible
 - Resume when a tab becomes visible
 - Get accurate counts of active (visible) clients
@@ -225,6 +229,7 @@ SharedWorkerClient uses the Page Visibility API to track when tabs are hidden/vi
 ### Sleep/Wake Handling
 
 When a computer sleeps:
+
 1. PortManager's ping/pong may timeout and remove "stale" clients
 2. When computer wakes, SharedWorkerClient instances send messages (pong, visibility-change, etc.)
 3. PortManager detects missing client and re-adds it automatically
@@ -233,6 +238,7 @@ When a computer sleeps:
 ## Example
 
 See the [example package](../example) for a complete demo showing:
+
 - SharedWorker managing a WebSocket connection
 - Multiple tabs sharing one connection
 - Connection paused when all tabs hidden

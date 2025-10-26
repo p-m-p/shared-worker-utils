@@ -48,12 +48,14 @@ Open the application in your browser (typically `http://localhost:5173`)
 ### 5. Test the Features
 
 **Test SharedWorker Connection Sharing:**
+
 1. Open the app in multiple tabs
 2. Check browser DevTools console in each tab
 3. Check the server terminal - only ONE client connection should be logged
 4. Close tabs one by one - connection persists until the last tab is closed
 
 **Test Visibility Optimization:**
+
 1. Open the app in one tab
 2. Open DevTools console to see update logs
 3. Switch to another tab or minimize the window
@@ -62,6 +64,7 @@ Open the application in your browser (typically `http://localhost:5173`)
 6. Switch back - updates resume immediately
 
 **Test Connection Pausing:**
+
 1. Open the app in multiple tabs
 2. Check server console - ONE WebSocket connection is active
 3. Hide/background ALL tabs (switch to a different application)
@@ -71,6 +74,7 @@ Open the application in your browser (typically `http://localhost:5173`)
 7. All tabs resume receiving updates
 
 **Test Reconnection:**
+
 1. Stop the server (`Ctrl+C`)
 2. Notice the connection status changes to "Disconnected"
 3. Restart the server
@@ -79,6 +83,7 @@ Open the application in your browser (typically `http://localhost:5173`)
 ## Architecture
 
 ### Server (`server.js`)
+
 - WebSocket server using the `ws` library
 - Broadcasts mock stock price data every second
 - Implements heartbeat/ping-pong mechanism (30-second interval)
@@ -86,12 +91,14 @@ Open the application in your browser (typically `http://localhost:5173`)
 - Broadcasts to 8 stock symbols: AAPL, GOOGL, MSFT, AMZN, TSLA, META, NVDA, AMD
 
 ### SharedWorker (`src/shared-worker.ts`)
+
 - Uses `PortManager` from `shared-worker-utils` to handle all port connections
 - Manages a single WebSocket connection to the server
 - Automatically connects/disconnects based on active client count
 - Broadcasts server messages to all connected clients
 
 ### Client (`src/main.ts`)
+
 - Uses `SharedWorkerClient` from `shared-worker-utils` to connect to SharedWorker
 - Displays real-time stock prices in a table
 - Pauses table updates when tab is not visible
@@ -156,11 +163,13 @@ All clients receive the same messages simultaneously from the SharedWorker.
 ## Browser Compatibility
 
 SharedWorker is supported in:
+
 - Chrome/Edge 4+
 - Firefox 29+
 - Safari 16+
 
 **Note**: SharedWorker is not supported in:
+
 - Internet Explorer
 - Safari iOS (mobile Safari)
 - Chrome on iOS (uses Safari engine)

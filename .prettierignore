@@ -1,0 +1,7 @@
+dist
+node_modules
+.changeset
+pnpm-lock.yaml
+*.min.js
+*.map
+coverage
