@@ -44,9 +44,9 @@ const portManager = new PortManager({
       // Resume operations
     }
   },
-  onCustomMessage: (port, message) => {
-    // Handle custom messages from clients
-    console.log('Custom message:', message);
+  onMessage: (port, message) => {
+    // Handle application messages from clients (internal messages filtered out)
+    console.log('Application message:', message);
   },
   onLog: (message, ...args) => {
     console.log(message, ...args);
@@ -82,13 +82,14 @@ const worker = new SharedWorker(
 
 const wrapper = new PortWrapper(worker, {
   onMessage: (message) => {
-    // Handle all messages from SharedWorker
+    // Handle application messages from SharedWorker
+    // Internal messages (ping, pong, client-count, visibility-change, disconnect) are filtered out
     switch (message.type) {
-      case 'client-count':
-        console.log(`Total: ${message.total}, Active: ${message.active}`);
-        break;
       case 'update':
         console.log('Update:', message.data);
+        break;
+      case 'welcome':
+        console.log('Welcome message:', message.data);
         break;
     }
   },
@@ -126,8 +127,8 @@ interface PortManagerOptions {
   /** Callback when active or total client count changes */
   onActiveCountChange?: (activeCount: number, totalCount: number) => void;
 
-  /** Callback for custom messages not handled by PortManager */
-  onCustomMessage?: (port: MessagePort, message: any) => void;
+  /** Callback for non-internal messages from clients */
+  onMessage?: (port: MessagePort, message: any) => void;
 
   /** Callback for internal logging */
   onLog?: (message: string, ...args: any[]) => void;
@@ -149,10 +150,13 @@ PortManager automatically handles these message types:
 - `disconnect` - Client is disconnecting
 - `pong` - Response to ping heartbeat
 
-#### Automatic Messages Sent
+#### Automatic Internal Messages
 
+These messages are sent by PortManager but are filtered out by PortWrapper and not passed to application code:
 - `ping` - Heartbeat message sent at `pingInterval`
 - `client-count` - Sent when client counts change: `{ type: 'client-count', total: number, active: number }`
+
+**Note**: If your application needs client count information, use the `onActiveCountChange` callback in PortManager to send a custom application message.
 
 ### PortWrapper
 
@@ -160,7 +164,7 @@ PortManager automatically handles these message types:
 
 ```typescript
 interface PortWrapperOptions {
-  /** Callback for all received messages from SharedWorker */
+  /** Callback for non-internal messages from SharedWorker */
   onMessage: (message: any) => void;
 
   /** Callback for internal logging */
@@ -180,6 +184,7 @@ PortWrapper automatically:
 - Responds to `ping` messages with `pong`
 - Sends `visibility-change` messages when tab visibility changes
 - Sends `disconnect` message on `beforeunload`
+- Filters out internal messages (ping, pong, client-count, visibility-change, disconnect) from `onMessage` callback
 
 ## How It Works
 

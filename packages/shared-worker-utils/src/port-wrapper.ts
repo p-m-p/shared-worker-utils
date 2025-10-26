@@ -58,9 +58,19 @@ export class PortWrapper {
         return;
       }
 
-      // Pass all other messages to the consumer
+      // Filter out other internal messages
+      if (this.isInternalMessage(message.type)) {
+        return;
+      }
+
+      // Pass non-internal messages to the consumer
       this.onMessage(message);
     };
+  }
+
+  private isInternalMessage(type: string): boolean {
+    return type === 'ping' || type === 'pong' || type === 'client-count' ||
+           type === 'visibility-change' || type === 'disconnect';
   }
 
   private setupVisibilityHandler(): void {

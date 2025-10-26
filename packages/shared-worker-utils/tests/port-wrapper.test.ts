@@ -115,7 +115,7 @@ describe('PortWrapper', () => {
     );
   });
 
-  it('should pass non-ping messages to onMessage callback', () => {
+  it('should pass non-internal messages to onMessage callback', () => {
     const onMessage = vi.fn();
 
     portWrapper = new PortWrapper(mockWorker as any, { onMessage });
@@ -124,6 +124,22 @@ describe('PortWrapper', () => {
     mockWorker.port.simulateMessage(testMessage);
 
     expect(onMessage).toHaveBeenCalledWith(testMessage);
+  });
+
+  it('should filter out internal messages', () => {
+    const onMessage = vi.fn();
+
+    portWrapper = new PortWrapper(mockWorker as any, { onMessage });
+
+    // Send various internal messages
+    mockWorker.port.simulateMessage({ type: 'ping' });
+    mockWorker.port.simulateMessage({ type: 'pong' });
+    mockWorker.port.simulateMessage({ type: 'client-count', total: 2, active: 1 });
+    mockWorker.port.simulateMessage({ type: 'visibility-change', visible: true });
+    mockWorker.port.simulateMessage({ type: 'disconnect' });
+
+    // onMessage should not have been called for any internal messages
+    expect(onMessage).not.toHaveBeenCalled();
   });
 
   it('should send messages via send()', () => {

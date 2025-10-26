@@ -82,21 +82,14 @@ const portWrapper = new PortWrapper(worker, {
         updateConnectionStatus(message.status);
         break;
 
-      case "client-count":
-        updateClientCounts(message.total, message.active);
-        // Update visibility UI based on wrapper's visibility
-        const isVisible = portWrapper.isVisible();
-        tabVisibility.textContent = isVisible ? "Visible" : "Hidden";
-        tabVisibility.className = `status ${isVisible ? "visible" : "hidden"}`;
-
-        // If tab became visible and we have data, update the table
-        if (isVisible && currentStockData.length > 0) {
-          updateStockTable(currentStockData);
-        }
-        break;
-
       case "stock-update":
         updateStockTable(message.data);
+        break;
+
+      case "client-info":
+        // Application-level client count message (not the internal client-count)
+        updateClientCounts(message.total, message.active);
+        updateVisibilityUI();
         break;
     }
   },
@@ -104,3 +97,21 @@ const portWrapper = new PortWrapper(worker, {
     console.log(message, ...args);
   },
 });
+
+// Update visibility UI based on wrapper's visibility
+const updateVisibilityUI = () => {
+  const isVisible = portWrapper.isVisible();
+  tabVisibility.textContent = isVisible ? "Visible" : "Hidden";
+  tabVisibility.className = `status ${isVisible ? "visible" : "hidden"}`;
+
+  // If tab became visible and we have data, update the table
+  if (isVisible && currentStockData.length > 0) {
+    updateStockTable(currentStockData);
+  }
+};
+
+// Initialize visibility UI
+updateVisibilityUI();
+
+// Listen for visibility changes to update UI
+document.addEventListener("visibilitychange", updateVisibilityUI);

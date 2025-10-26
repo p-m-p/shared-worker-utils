@@ -17,7 +17,7 @@ function log(message: string, ...args: any[]) {
 const portManager = new PortManager({
   pingInterval: 10000,
   pingTimeout: 5000,
-  onActiveCountChange: (activeCount, _totalCount) => {
+  onActiveCountChange: (activeCount, totalCount) => {
     // Manage WebSocket connection based on active clients
     if (activeCount === 0 && socket) {
       log('[WebSocket] No active clients, pausing WebSocket connection');
@@ -26,9 +26,16 @@ const portManager = new PortManager({
       log('[WebSocket] Active client detected, resuming WebSocket connection');
       connectWebSocket();
     }
+
+    // Send client count as an application message (not the internal client-count message)
+    portManager.broadcast({
+      type: 'client-info',
+      total: totalCount,
+      active: activeCount,
+    });
   },
-  onCustomMessage: (_port, message) => {
-    // Forward custom messages to WebSocket server if needed
+  onMessage: (_port, message) => {
+    // Forward application messages to WebSocket server if needed
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(message));
     }

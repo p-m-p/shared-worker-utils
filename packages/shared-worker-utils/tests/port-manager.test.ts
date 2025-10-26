@@ -226,9 +226,9 @@ describe('PortManager', () => {
     expect(onActiveCountChange).toHaveBeenCalledWith(0, 1);
   });
 
-  it('should call onCustomMessage for unknown message types', () => {
-    const onCustomMessage = vi.fn();
-    portManager = new PortManager({ onCustomMessage });
+  it('should call onMessage for non-internal message types', () => {
+    const onMessage = vi.fn();
+    portManager = new PortManager({ onMessage });
 
     mockPort = new MockMessagePort() as any;
     portManager.handleConnect(mockPort as any);
@@ -236,7 +236,7 @@ describe('PortManager', () => {
     const customMessage = { type: 'custom', data: 'test' };
     mockPort.simulateMessage(customMessage);
 
-    expect(onCustomMessage).toHaveBeenCalledWith(mockPort, customMessage);
+    expect(onMessage).toHaveBeenCalledWith(mockPort, customMessage);
   });
 
   it('should clean up on destroy', () => {

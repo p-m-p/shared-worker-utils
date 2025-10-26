@@ -9,7 +9,7 @@ export class PortManager {
   private pingInterval: number;
   private pingTimeout: number;
   private onActiveCountChange?: (activeCount: number, totalCount: number) => void;
-  private onCustomMessage?: (port: MessagePort, message: any) => void;
+  private onMessage?: (port: MessagePort, message: any) => void;
   private onLog?: (message: string, ...args: any[]) => void;
   private pingIntervalId: ReturnType<typeof setInterval>;
 
@@ -17,7 +17,7 @@ export class PortManager {
     this.pingInterval = options.pingInterval ?? 10000;
     this.pingTimeout = options.pingTimeout ?? 5000;
     this.onActiveCountChange = options.onActiveCountChange;
-    this.onCustomMessage = options.onCustomMessage;
+    this.onMessage = options.onMessage;
     this.onLog = options.onLog;
 
     // Start ping interval
@@ -92,8 +92,8 @@ export class PortManager {
       client.lastPong = Date.now();
       this.log('Received pong from client');
     } else {
-      // Custom message
-      this.onCustomMessage?.(port, data);
+      // Non-internal message - pass through to application
+      this.onMessage?.(port, data);
     }
   }
 

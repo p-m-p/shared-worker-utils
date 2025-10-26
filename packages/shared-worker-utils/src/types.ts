@@ -17,9 +17,10 @@ export interface PortManagerOptions {
   onActiveCountChange?: (activeCount: number, totalCount: number) => void;
 
   /**
-   * Callback for custom messages not handled by PortManager
+   * Callback for non-internal messages from clients
+   * Internal messages (ping, pong, visibility-change, disconnect, client-count) are filtered out
    */
-  onCustomMessage?: (port: MessagePort, message: any) => void;
+  onMessage?: (port: MessagePort, message: any) => void;
 
   /**
    * Callback for internal logging
@@ -29,7 +30,8 @@ export interface PortManagerOptions {
 
 export interface PortWrapperOptions {
   /**
-   * Callback for all received messages from SharedWorker
+   * Callback for non-internal messages from SharedWorker
+   * Internal messages (ping, pong, visibility-change, disconnect, client-count) are filtered out
    */
   onMessage: (message: any) => void;
 
