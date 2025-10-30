@@ -1,0 +1,1 @@
+{\n  "$schema": "https://docs.renovatebot.com/renovate-schema.json",\n  "extends": [\n    "local>p-m-p/renovate-config"\n  ]\n}
