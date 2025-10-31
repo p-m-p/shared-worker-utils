@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/p-m-p/shared-worker-utils#readme",
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^24.0.0",
     "jsdom": "^27.0.1",
     "typescript": "~5.9.3",
     "vite": "^7.0.0",
