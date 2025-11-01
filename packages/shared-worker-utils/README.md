@@ -17,12 +17,61 @@ Utilities for managing SharedWorker port connections with ping/pong heartbeat an
 
 ## Installation
 
+### Via Package Manager
+
 ```bash
 npm install shared-worker-utils
 # or
 pnpm add shared-worker-utils
 # or
 yarn add shared-worker-utils
+```
+
+### Via CDN (ESM)
+
+You can also import directly from a CDN without a build step:
+
+```typescript
+// Import from esm.sh CDN
+import {
+  PortManager,
+  SharedWorkerClient,
+} from 'https://esm.sh/shared-worker-utils'
+
+// Or with a specific version
+import {
+  PortManager,
+  SharedWorkerClient,
+} from 'https://esm.sh/shared-worker-utils@1.0.0'
+```
+
+**Example with SharedWorker:**
+
+```typescript
+// my-worker.js
+import { PortManager } from 'https://esm.sh/shared-worker-utils@1'
+
+const portManager = new PortManager({
+  onActiveCountChange: (active, total) => {
+    console.log(`Active: ${active}/${total}`)
+  },
+})
+
+self.onconnect = (event) => {
+  portManager.handleConnect(event.ports[0])
+}
+```
+
+```html
+<!-- index.html -->
+<script type="module">
+  import { SharedWorkerClient } from 'https://esm.sh/shared-worker-utils@1'
+
+  const worker = new SharedWorker('./my-worker.js', { type: 'module' })
+  const client = new SharedWorkerClient(worker, {
+    onMessage: (message) => console.log('Received:', message),
+  })
+</script>
 ```
 
 ## Usage
