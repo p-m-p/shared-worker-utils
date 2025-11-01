@@ -18,7 +18,11 @@
       "Bash(pnpm changeset:*)",
       "Bash(git pull:*)",
       "Bash(git stash:*)",
-      "Bash(pnpm format:*)"
+      "Bash(pnpm format:*)",
+      "Bash(npx eslint --version)",
+      "Bash(npx eslint:*)",
+      "Bash(node eslint.config.js:*)",
+      "Bash(npm info:*)"
     ],
     "deny": [],
     "ask": []

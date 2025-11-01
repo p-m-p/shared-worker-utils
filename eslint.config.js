@@ -12,7 +12,7 @@ export default tseslint.config(
     ],
   },
   ...tseslint.configs.recommended,
-  unicorn.configs['flat/recommended'],
+  unicorn.configs.recommended,
   {
     rules: {
       '@typescript-eslint/no-unused-vars': [
