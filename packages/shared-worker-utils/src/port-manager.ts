@@ -14,7 +14,7 @@ export class PortManager<TMessage = unknown> {
     totalCount: number
   ) => void
   private onMessage?: (port: MessagePort, message: TMessage) => void
-  private onLog?: (message: string, ...args: unknown[]) => void
+  private onLog?: (message: string, ...parameters: unknown[]) => void
   private pingIntervalId: ReturnType<typeof setInterval>
 
   constructor(options: PortManagerOptions<TMessage> = {}) {
@@ -161,8 +161,8 @@ export class PortManager<TMessage = unknown> {
     this.onActiveCountChange?.(activeCount, totalCount)
   }
 
-  private log(message: string, ...args: unknown[]): void {
-    this.onLog?.(`[PortManager] ${message}`, ...args)
+  private log(message: string, ...parameters: unknown[]): void {
+    this.onLog?.(`[PortManager] ${message}`, ...parameters)
   }
 
   /**

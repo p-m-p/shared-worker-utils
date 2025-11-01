@@ -60,14 +60,14 @@ function updateStockTable(stocks: StockData[]) {
   // Create rows for each stock
   for (const stock of stocks) {
     const row = document.createElement('tr')
-    const changeNum = Number.parseFloat(stock.change)
-    const changeClass = changeNum >= 0 ? 'positive' : 'negative'
+    const changeNumber = Number.parseFloat(stock.change)
+    const changeClass = changeNumber >= 0 ? 'positive' : 'negative'
 
     row.innerHTML = `
       <td class="symbol">${stock.symbol}</td>
       <td class="price">$${stock.price}</td>
-      <td class="change ${changeClass}">${changeNum >= 0 ? '+' : ''}${stock.change}</td>
-      <td class="change ${changeClass}">${changeNum >= 0 ? '+' : ''}${stock.percentChange}%</td>
+      <td class="change ${changeClass}">${changeNumber >= 0 ? '+' : ''}${stock.change}</td>
+      <td class="change ${changeClass}">${changeNumber >= 0 ? '+' : ''}${stock.percentChange}%</td>
       <td class="timestamp">${formatTime(stock.timestamp)}</td>
     `
 
@@ -102,8 +102,8 @@ const portWrapper = new SharedWorkerClient<WorkerMessage>(worker, {
       }
     }
   },
-  onLog: (message, ...args) => {
-    console.log(message, ...args)
+  onLog: (message, ...parameters) => {
+    console.log(message, ...parameters)
   },
 })
 

@@ -9,11 +9,15 @@ interface TestMessage {
 
 // Mock MessagePort for SharedWorker
 class MockPort {
-  onmessage: ((event: MessageEvent) => void) | null = null
+  private listeners = new Map<string, (event: MessageEvent) => void>()
   private messages: unknown[] = []
 
   postMessage(data: unknown) {
     this.messages.push(data)
+  }
+
+  addEventListener(type: string, listener: (event: MessageEvent) => void) {
+    this.listeners.set(type, listener)
   }
 
   start() {
@@ -32,8 +36,9 @@ class MockPort {
 
   // Test helper to simulate receiving a message
   simulateMessage(data: unknown) {
-    if (this.onmessage) {
-      this.onmessage({ data } as MessageEvent)
+    const listener = this.listeners.get('message')
+    if (listener) {
+      listener({ data } as MessageEvent)
     }
   }
 }

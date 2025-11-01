@@ -23,10 +23,6 @@ export default tseslint.config(
         },
       ],
       // Unicorn rules customization
-      'unicorn/prevent-abbreviations': 'off',
-      'unicorn/no-null': 'off',
-      'unicorn/prefer-add-event-listener': 'off', // MessagePort.onmessage is standard
-      'unicorn/consistent-function-scoping': 'off', // Allow closures for cleaner code
       'unicorn/filename-case': [
         'error',
         {

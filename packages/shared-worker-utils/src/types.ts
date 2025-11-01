@@ -25,7 +25,7 @@ export interface PortManagerOptions<TMessage = unknown> {
   /**
    * Callback for internal logging
    */
-  onLog?: (message: string, ...args: unknown[]) => void
+  onLog?: (message: string, ...parameters: unknown[]) => void
 }
 
 export interface SharedWorkerClientOptions<TMessage = unknown> {
@@ -38,7 +38,7 @@ export interface SharedWorkerClientOptions<TMessage = unknown> {
   /**
    * Callback for internal logging
    */
-  onLog?: (message: string, ...args: unknown[]) => void
+  onLog?: (message: string, ...parameters: unknown[]) => void
 }
 
 export interface ClientState {

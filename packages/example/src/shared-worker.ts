@@ -7,13 +7,13 @@ declare const self: SharedWorkerGlobalScope
 // Define message types for application messages
 type AppMessage = never // No application messages from clients in this example
 
-let socket: WebSocket | null = null
+let socket: WebSocket | undefined
 const WEBSOCKET_URL = 'ws://localhost:8080'
-let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
+let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 const RECONNECT_DELAY = 3000
 
-function log(message: string, ...args: unknown[]) {
-  console.log(message, ...args)
+function log(message: string, ...parameters: unknown[]) {
+  console.log(message, ...parameters)
 }
 
 // Initialize PortManager with typed messages
@@ -83,7 +83,7 @@ function connectWebSocket() {
 
   socket.addEventListener('close', () => {
     log('[WebSocket] Disconnected')
-    socket = null
+    socket = undefined
 
     // Notify all connected clients
     portManager.broadcast({
@@ -112,13 +112,13 @@ function connectWebSocket() {
 function disconnectWebSocket() {
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout)
-    reconnectTimeout = null
+    reconnectTimeout = undefined
   }
 
   if (socket) {
     log('[WebSocket] Disconnecting')
     socket.close()
-    socket = null
+    socket = undefined
   }
 }
 

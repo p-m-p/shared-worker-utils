@@ -130,7 +130,7 @@ describe('PortManager', () => {
     portManager.handleConnect(mockPort as unknown as MessagePort)
 
     // Clear initial messages
-    ;(mockPort as unknown as MessagePort).lastMessage = null
+    ;(mockPort as unknown as MessagePort).lastMessage = undefined
 
     // Advance time to trigger ping
     vi.advanceTimersByTime(5000)
