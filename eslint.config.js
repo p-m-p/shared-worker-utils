@@ -1,8 +1,9 @@
-import tseslint from 'typescript-eslint'
-import unicorn from 'eslint-plugin-unicorn'
+import { defineConfig } from 'eslint/config'
 import prettier from 'eslint-plugin-prettier/recommended'
+import unicorn from 'eslint-plugin-unicorn'
+import tseslint from 'typescript-eslint'
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: [
       '**/dist/**',
@@ -11,7 +12,7 @@ export default tseslint.config(
       '**/*.config.ts',
     ],
   },
-  ...tseslint.configs.recommended,
+  tseslint.configs.recommended,
   unicorn.configs.recommended,
   {
     rules: {
