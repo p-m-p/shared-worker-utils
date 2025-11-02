@@ -15,7 +15,6 @@ A lightweight TypeScript library for managing SharedWorker port connections with
 - 👁️ **Visibility Tracking** - Automatically tracks which tabs are visible/hidden
 - 🎯 **Type-Safe** - Full TypeScript support with generic message types
 - 🔌 **Automatic Reconnection** - Gracefully handles disconnections and reconnects clients
-- 🧪 **Well Tested** - Comprehensive test coverage with 26 unit tests
 - 📦 **Tiny** - Only 3.98 kB (1.30 kB gzipped)
 
 ## Installation
