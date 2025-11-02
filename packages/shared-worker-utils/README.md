@@ -7,7 +7,7 @@ Utilities for managing SharedWorker port connections with ping/pong heartbeat an
 - **PortManager**: Manages MessagePort connections in a SharedWorker
   - Automatic ping/pong heartbeat to detect stale connections
   - Visibility state tracking for all connected clients
-  - Automatic reconnection after sleep/wake cycles
+  - Automatic reconnection of disconnected clients
   - Message broadcasting to all clients
 
 - **SharedWorkerClient**: Wraps a SharedWorker connection on the client side
@@ -248,13 +248,13 @@ SharedWorkerClient uses the Page Visibility API to track when tabs are hidden/vi
 - Resume when a tab becomes visible
 - Get accurate counts of active (visible) clients
 
-### Sleep/Wake Handling
+### Automatic Reconnection
 
-When a computer sleeps:
+If a client is disconnected:
 
-1. PortManager's ping/pong may timeout and remove "stale" clients
-2. When computer wakes, SharedWorkerClient instances send messages (pong, visibility-change, etc.)
-3. PortManager detects missing client and re-adds it automatically
+1. PortManager's ping/pong mechanism will timeout and remove stale clients
+2. When the client reconnects and sends messages, PortManager detects the missing client
+3. The client is automatically re-added to the connection pool
 4. Everything resumes normally
 
 ## Example

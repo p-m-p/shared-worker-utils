@@ -158,7 +158,7 @@ All clients receive the same messages simultaneously from the SharedWorker.
 - **Page Visibility API**: Detecting when tabs are backgrounded
 - **Resource Optimization**: Pausing updates for hidden tabs and closing connections when no active clients
 - **Heartbeat Pattern**: Keeping connections alive with ping/pong
-- **Automatic Reconnection**: Handling sleep/wake cycles and network issues
+- **Automatic Reconnection**: Handling disconnections and reconnecting clients
 
 ## Browser Compatibility
 
