@@ -14,7 +14,6 @@ A lightweight TypeScript library for managing SharedWorker port connections with
 - 🔄 **Automatic Heartbeat** - Ping/pong mechanism to detect and remove stale clients
 - 👁️ **Visibility Tracking** - Automatically tracks which tabs are visible/hidden
 - 🎯 **Type-Safe** - Full TypeScript support with generic message types
-- 📡 **Message Filtering** - Internal messages automatically filtered from application code
 - 💤 **Sleep/Wake Handling** - Gracefully handles computer sleep/wake cycles
 - 🧪 **Well Tested** - Comprehensive test coverage with 26 unit tests
 - 📦 **Tiny** - Only 3.98 kB (1.30 kB gzipped)
