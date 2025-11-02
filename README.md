@@ -180,7 +180,7 @@ Then open http://localhost:5173 in multiple tabs!
 - `pingInterval?: number` - Interval between ping messages (default: 10000ms)
 - `pingTimeout?: number` - Max time to wait for pong response (default: 5000ms)
 - `onActiveCountChange?: (activeCount: number, totalCount: number) => void` - Callback when client counts change
-- `onMessage?: (port: MessagePort, message: TMessage) => void` - Callback for non-internal messages
+- `onMessage?: (port: MessagePort, message: TMessage) => void` - Callback for messages from clients
 - `onLog?: (message: string, ...args: unknown[]) => void` - Callback for internal logging
 
 **Methods:**
@@ -195,7 +195,7 @@ Then open http://localhost:5173 in multiple tabs!
 
 **Constructor Options:**
 
-- `onMessage: (message: TMessage) => void` - Callback for non-internal messages (required)
+- `onMessage: (message: TMessage) => void` - Callback for messages from SharedWorker (required)
 - `onLog?: (message: string, ...args: unknown[]) => void` - Callback for internal logging
 
 **Methods:**
@@ -208,17 +208,7 @@ Then open http://localhost:5173 in multiple tabs!
 
 ## Browser Support
 
-SharedWorker is supported in:
-
-- ✅ Chrome/Edge 4+
-- ✅ Firefox 29+
-- ✅ Safari 16+
-
-Not supported in:
-
-- ❌ Internet Explorer
-- ❌ Mobile Safari (iOS)
-- ❌ Chrome on iOS (uses Safari engine)
+See [MDN Browser Compatibility](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker#browser_compatibility) for current SharedWorker support across browsers.
 
 ## Development
 

@@ -99,7 +99,7 @@ const portManager = new PortManager<ClientMessage>({
     }
   },
   onMessage: (port, message) => {
-    // message is typed as ClientMessage - internal messages filtered out
+    // message is typed as ClientMessage
     if (message.type === 'request-data') {
       console.log('Data requested:', message.id)
     }
@@ -143,7 +143,6 @@ const worker = new SharedWorker(new URL('./my-worker.ts', import.meta.url), {
 const client = new SharedWorkerClient<WorkerMessage>(worker, {
   onMessage: (message) => {
     // message is typed as WorkerMessage
-    // Internal messages (ping, pong, client-count, visibility-change, disconnect) are filtered out
     switch (message.type) {
       case 'update':
         console.log('Update:', message.data)
@@ -189,7 +188,7 @@ interface PortManagerOptions<TMessage = unknown> {
   /** Callback when active or total client count changes */
   onActiveCountChange?: (activeCount: number, totalCount: number) => void
 
-  /** Callback for non-internal messages from clients */
+  /** Callback for messages from clients */
   onMessage?: (port: MessagePort, message: TMessage) => void
 
   /** Callback for internal logging */
@@ -205,23 +204,6 @@ interface PortManagerOptions<TMessage = unknown> {
 - `getTotalCount(): number` - Get the total number of connected clients
 - `destroy(): void` - Clean up resources (stop ping interval)
 
-#### Internal Messages Handled
-
-PortManager automatically handles these message types (all prefixed with `@shared-worker-utils/`):
-
-- `@shared-worker-utils/visibility-change` - Client visibility state changed
-- `@shared-worker-utils/disconnect` - Client is disconnecting
-- `@shared-worker-utils/pong` - Response to ping heartbeat
-
-#### Automatic Internal Messages
-
-These messages are sent by PortManager but are filtered out by SharedWorkerClient and not passed to application code:
-
-- `@shared-worker-utils/ping` - Heartbeat message sent at `pingInterval`
-- `@shared-worker-utils/client-count` - Sent when client counts change: `{ type: '@shared-worker-utils/client-count', total: number, active: number }`
-
-**Note**: All internal messages use the `@shared-worker-utils/` namespace prefix to avoid collision with your application message types. If your application needs client count information, use the `onActiveCountChange` callback in PortManager to send a custom application message.
-
 ### SharedWorkerClient
 
 `SharedWorkerClient<TMessage = unknown>` - Generic type parameter for application messages from SharedWorker.
@@ -230,7 +212,7 @@ These messages are sent by PortManager but are filtered out by SharedWorkerClien
 
 ```typescript
 interface SharedWorkerClientOptions<TMessage = unknown> {
-  /** Callback for non-internal messages from SharedWorker */
+  /** Callback for messages from SharedWorker */
   onMessage: (message: TMessage) => void
 
   /** Callback for internal logging */
@@ -243,15 +225,6 @@ interface SharedWorkerClientOptions<TMessage = unknown> {
 - `send(message: unknown): void` - Send a message to the SharedWorker
 - `disconnect(): void` - Disconnect from the SharedWorker
 - `isVisible(): boolean` - Check if the tab is currently visible
-
-#### Automatic Behavior
-
-SharedWorkerClient automatically:
-
-- Responds to `@shared-worker-utils/ping` messages with `@shared-worker-utils/pong`
-- Sends `@shared-worker-utils/visibility-change` messages when tab visibility changes
-- Sends `@shared-worker-utils/disconnect` message on `beforeunload`
-- Filters out all internal messages (prefixed with `@shared-worker-utils/`) from `onMessage` callback
 
 ## How It Works
 

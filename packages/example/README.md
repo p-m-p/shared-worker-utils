@@ -162,17 +162,7 @@ All clients receive the same messages simultaneously from the SharedWorker.
 
 ## Browser Compatibility
 
-SharedWorker is supported in:
-
-- Chrome/Edge 4+
-- Firefox 29+
-- Safari 16+
-
-**Note**: SharedWorker is not supported in:
-
-- Internet Explorer
-- Safari iOS (mobile Safari)
-- Chrome on iOS (uses Safari engine)
+See [MDN Browser Compatibility](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker#browser_compatibility) for current SharedWorker support across browsers.
 
 ## License
 
