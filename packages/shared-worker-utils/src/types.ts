@@ -18,7 +18,7 @@ export interface PortManagerOptions<TMessage = unknown> {
 
   /**
    * Callback for non-internal messages from clients
-   * Internal messages (ping, pong, visibility-change, disconnect, client-count) are filtered out
+   * Internal messages (prefixed with @shared-worker-utils/) are filtered out
    */
   onMessage?: (port: MessagePort, message: TMessage) => void
 
@@ -31,7 +31,7 @@ export interface PortManagerOptions<TMessage = unknown> {
 export interface SharedWorkerClientOptions<TMessage = unknown> {
   /**
    * Callback for non-internal messages from SharedWorker
-   * Internal messages (ping, pong, visibility-change, disconnect, client-count) are filtered out
+   * Internal messages (prefixed with @shared-worker-utils/) are filtered out
    */
   onMessage: (message: TMessage) => void
 
@@ -47,26 +47,26 @@ export interface ClientState {
 }
 
 export interface ClientCountMessage {
-  type: 'client-count'
+  type: '@shared-worker-utils/client-count'
   total: number
   active: number
 }
 
 export interface VisibilityChangeMessage {
-  type: 'visibility-change'
+  type: '@shared-worker-utils/visibility-change'
   visible: boolean
 }
 
 export interface DisconnectMessage {
-  type: 'disconnect'
+  type: '@shared-worker-utils/disconnect'
 }
 
 export interface PingMessage {
-  type: 'ping'
+  type: '@shared-worker-utils/ping'
 }
 
 export interface PongMessage {
-  type: 'pong'
+  type: '@shared-worker-utils/pong'
 }
 
 export type InternalMessage =

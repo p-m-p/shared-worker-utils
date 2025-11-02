@@ -74,7 +74,7 @@ describe('PortManager', () => {
     portManager.handleConnect(mockPort as unknown as MessagePort)
 
     expect((mockPort as unknown as MessagePort).lastMessage).toEqual({
-      type: 'client-count',
+      type: '@shared-worker-utils/client-count',
       total: 1,
       active: 1,
     })
@@ -88,7 +88,10 @@ describe('PortManager', () => {
     portManager.handleConnect(mockPort as unknown as MessagePort)
 
     // Change visibility to hidden
-    mockPort.simulateMessage({ type: 'visibility-change', visible: false })
+    mockPort.simulateMessage({
+      type: '@shared-worker-utils/visibility-change',
+      visible: false,
+    })
 
     expect(portManager.getActiveCount()).toBe(0)
     expect(portManager.getTotalCount()).toBe(1)
@@ -101,7 +104,7 @@ describe('PortManager', () => {
     portManager.handleConnect(mockPort as unknown as MessagePort)
     expect(portManager.getTotalCount()).toBe(1)
 
-    mockPort.simulateMessage({ type: 'disconnect' })
+    mockPort.simulateMessage({ type: '@shared-worker-utils/disconnect' })
 
     expect(portManager.getTotalCount()).toBe(0)
   })
@@ -136,7 +139,7 @@ describe('PortManager', () => {
     vi.advanceTimersByTime(5000)
 
     expect((mockPort as unknown as MessagePort).lastMessage).toEqual({
-      type: 'ping',
+      type: '@shared-worker-utils/ping',
     })
     expect(onLog).toHaveBeenCalledWith('[PortManager] Sending ping to client')
   })
@@ -148,7 +151,7 @@ describe('PortManager', () => {
     mockPort = new MockMessagePort() as unknown as MessagePort
     portManager.handleConnect(mockPort as unknown as MessagePort)
 
-    mockPort.simulateMessage({ type: 'pong' })
+    mockPort.simulateMessage({ type: '@shared-worker-utils/pong' })
 
     expect(onLog).toHaveBeenCalledWith(
       '[PortManager] Received pong from client'
@@ -192,7 +195,7 @@ describe('PortManager', () => {
     vi.advanceTimersByTime(pingInterval)
 
     // Respond with pong
-    mockPort.simulateMessage({ type: 'pong' })
+    mockPort.simulateMessage({ type: '@shared-worker-utils/pong' })
 
     // Advance past timeout
     vi.advanceTimersByTime(pingTimeout + 1000)
@@ -217,7 +220,7 @@ describe('PortManager', () => {
     expect(portManager.getTotalCount()).toBe(0)
 
     // Client sends a message (e.g., after computer wakes from sleep)
-    mockPort.simulateMessage({ type: 'pong' })
+    mockPort.simulateMessage({ type: '@shared-worker-utils/pong' })
 
     expect(portManager.getTotalCount()).toBe(1)
     expect(onLog).toHaveBeenCalledWith(
@@ -234,7 +237,10 @@ describe('PortManager', () => {
 
     expect(onActiveCountChange).toHaveBeenCalledWith(1, 1)
 
-    mockPort.simulateMessage({ type: 'visibility-change', visible: false })
+    mockPort.simulateMessage({
+      type: '@shared-worker-utils/visibility-change',
+      visible: false,
+    })
 
     expect(onActiveCountChange).toHaveBeenCalledWith(0, 1)
   })

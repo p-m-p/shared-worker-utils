@@ -132,10 +132,10 @@ describe('SharedWorkerClient', () => {
       { onMessage, onLog }
     )
 
-    mockWorker.port.simulateMessage({ type: 'ping' })
+    mockWorker.port.simulateMessage({ type: '@shared-worker-utils/ping' })
 
     const lastMessage = mockWorker.port.getLastMessage()
-    expect(lastMessage).toEqual({ type: 'pong' })
+    expect(lastMessage).toEqual({ type: '@shared-worker-utils/pong' })
     expect(onLog).toHaveBeenCalledWith(
       '[SharedWorkerClient] Received ping from SharedWorker, sending pong'
     )
@@ -164,18 +164,18 @@ describe('SharedWorkerClient', () => {
     )
 
     // Send various internal messages
-    mockWorker.port.simulateMessage({ type: 'ping' })
-    mockWorker.port.simulateMessage({ type: 'pong' })
+    mockWorker.port.simulateMessage({ type: '@shared-worker-utils/ping' })
+    mockWorker.port.simulateMessage({ type: '@shared-worker-utils/pong' })
     mockWorker.port.simulateMessage({
-      type: 'client-count',
+      type: '@shared-worker-utils/client-count',
       total: 2,
       active: 1,
     })
     mockWorker.port.simulateMessage({
-      type: 'visibility-change',
+      type: '@shared-worker-utils/visibility-change',
       visible: true,
     })
-    mockWorker.port.simulateMessage({ type: 'disconnect' })
+    mockWorker.port.simulateMessage({ type: '@shared-worker-utils/disconnect' })
 
     // onMessage should not have been called for any internal messages
     expect(onMessage).not.toHaveBeenCalled()
@@ -213,7 +213,7 @@ describe('SharedWorkerClient', () => {
 
     const lastMessage = mockWorker.port.getLastMessage()
     expect(lastMessage).toEqual({
-      type: 'visibility-change',
+      type: '@shared-worker-utils/visibility-change',
       visible: false,
     })
     expect(portWrapper.isVisible()).toBe(false)
@@ -242,7 +242,7 @@ describe('SharedWorkerClient', () => {
 
     const lastMessage = mockWorker.port.getLastMessage()
     expect(lastMessage).toEqual({
-      type: 'visibility-change',
+      type: '@shared-worker-utils/visibility-change',
       visible: true,
     })
     expect(portWrapper.isVisible()).toBe(true)
@@ -278,7 +278,7 @@ describe('SharedWorkerClient', () => {
     mockWindow.simulateBeforeUnload()
 
     const lastMessage = mockWorker.port.getLastMessage()
-    expect(lastMessage).toEqual({ type: 'disconnect' })
+    expect(lastMessage).toEqual({ type: '@shared-worker-utils/disconnect' })
   })
 
   it('should send disconnect message when disconnect() is called', () => {
@@ -292,7 +292,7 @@ describe('SharedWorkerClient', () => {
     portWrapper.disconnect()
 
     const lastMessage = mockWorker.port.getLastMessage()
-    expect(lastMessage).toEqual({ type: 'disconnect' })
+    expect(lastMessage).toEqual({ type: '@shared-worker-utils/disconnect' })
   })
 
   it('should work without onLog callback', () => {

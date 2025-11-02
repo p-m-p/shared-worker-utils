@@ -41,7 +41,7 @@ export class SharedWorkerClient<TMessage = unknown> {
    * Disconnect from the SharedWorker
    */
   disconnect(): void {
-    this.send({ type: 'disconnect' })
+    this.send({ type: '@shared-worker-utils/disconnect' })
   }
 
   /**
@@ -56,9 +56,9 @@ export class SharedWorkerClient<TMessage = unknown> {
     const message = data as { type?: string }
 
     // Handle internal ping messages
-    if (message.type === 'ping') {
+    if (message.type === '@shared-worker-utils/ping') {
       this.log('Received ping from SharedWorker, sending pong')
-      this.send({ type: 'pong' })
+      this.send({ type: '@shared-worker-utils/pong' })
       return
     }
 
@@ -76,13 +76,7 @@ export class SharedWorkerClient<TMessage = unknown> {
   }
 
   private isInternalMessage(type: string): boolean {
-    return (
-      type === 'ping' ||
-      type === 'pong' ||
-      type === 'client-count' ||
-      type === 'visibility-change' ||
-      type === 'disconnect'
-    )
+    return type.startsWith('@shared-worker-utils/')
   }
 
   private handleVisibilityChange = (): void => {
@@ -96,7 +90,7 @@ export class SharedWorkerClient<TMessage = unknown> {
 
       // Notify SharedWorker of visibility change
       this.send({
-        type: 'visibility-change',
+        type: '@shared-worker-utils/visibility-change',
         visible: this.isTabVisible,
       })
     }

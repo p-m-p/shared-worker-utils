@@ -91,21 +91,21 @@ export class PortManager<TMessage = unknown> {
     const message = data as { type?: string; visible?: boolean }
 
     switch (message.type) {
-      case 'visibility-change': {
+      case '@shared-worker-utils/visibility-change': {
         client.visible = message.visible ?? true
         this.log(`Client visibility changed: ${message.visible}`)
         this.updateClientCount()
 
         break
       }
-      case 'disconnect': {
+      case '@shared-worker-utils/disconnect': {
         this.clients.delete(port)
         this.log(`Client disconnected. Remaining clients: ${this.clients.size}`)
         this.updateClientCount()
 
         break
       }
-      case 'pong': {
+      case '@shared-worker-utils/pong': {
         client.lastPong = Date.now()
         this.log('Received pong from client')
 
@@ -131,7 +131,7 @@ export class PortManager<TMessage = unknown> {
       } else {
         // Send ping
         this.log('Sending ping to client')
-        port.postMessage({ type: 'ping' })
+        port.postMessage({ type: '@shared-worker-utils/ping' })
       }
     }
 
@@ -152,7 +152,7 @@ export class PortManager<TMessage = unknown> {
 
     // Broadcast client count to all clients
     this.broadcast({
-      type: 'client-count',
+      type: '@shared-worker-utils/client-count',
       total: totalCount,
       active: activeCount,
     })

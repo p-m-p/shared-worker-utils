@@ -207,20 +207,20 @@ interface PortManagerOptions<TMessage = unknown> {
 
 #### Internal Messages Handled
 
-PortManager automatically handles these message types:
+PortManager automatically handles these message types (all prefixed with `@shared-worker-utils/`):
 
-- `visibility-change` - Client visibility state changed
-- `disconnect` - Client is disconnecting
-- `pong` - Response to ping heartbeat
+- `@shared-worker-utils/visibility-change` - Client visibility state changed
+- `@shared-worker-utils/disconnect` - Client is disconnecting
+- `@shared-worker-utils/pong` - Response to ping heartbeat
 
 #### Automatic Internal Messages
 
 These messages are sent by PortManager but are filtered out by SharedWorkerClient and not passed to application code:
 
-- `ping` - Heartbeat message sent at `pingInterval`
-- `client-count` - Sent when client counts change: `{ type: 'client-count', total: number, active: number }`
+- `@shared-worker-utils/ping` - Heartbeat message sent at `pingInterval`
+- `@shared-worker-utils/client-count` - Sent when client counts change: `{ type: '@shared-worker-utils/client-count', total: number, active: number }`
 
-**Note**: If your application needs client count information, use the `onActiveCountChange` callback in PortManager to send a custom application message.
+**Note**: All internal messages use the `@shared-worker-utils/` namespace prefix to avoid collision with your application message types. If your application needs client count information, use the `onActiveCountChange` callback in PortManager to send a custom application message.
 
 ### SharedWorkerClient
 
@@ -248,10 +248,10 @@ interface SharedWorkerClientOptions<TMessage = unknown> {
 
 SharedWorkerClient automatically:
 
-- Responds to `ping` messages with `pong`
-- Sends `visibility-change` messages when tab visibility changes
-- Sends `disconnect` message on `beforeunload`
-- Filters out internal messages (ping, pong, client-count, visibility-change, disconnect) from `onMessage` callback
+- Responds to `@shared-worker-utils/ping` messages with `@shared-worker-utils/pong`
+- Sends `@shared-worker-utils/visibility-change` messages when tab visibility changes
+- Sends `@shared-worker-utils/disconnect` message on `beforeunload`
+- Filters out all internal messages (prefixed with `@shared-worker-utils/`) from `onMessage` callback
 
 ## How It Works
 
