@@ -1,0 +1,62 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Connection lines -->
+  <line x1="100" y1="100" x2="40" y2="45" stroke="#6c757d" stroke-width="2" opacity="0.3"/>
+  <line x1="100" y1="100" x2="160" y2="60" stroke="#6c757d" stroke-width="2" opacity="0.3"/>
+  <line x1="100" y1="100" x2="55" y2="155" stroke="#6c757d" stroke-width="2" opacity="0.3"/>
+  <line x1="100" y1="100" x2="145" y2="145" stroke="#6c757d" stroke-width="2" opacity="0.3"/>
+
+  <!-- Animated pulse rings -->
+  <circle cx="100" cy="100" r="35" fill="none" stroke="#4dabf7" stroke-width="2" opacity="0.6">
+    <animate attributeName="r" from="35" to="55" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="100" cy="100" r="35" fill="none" stroke="#4dabf7" stroke-width="2" opacity="0.6">
+    <animate attributeName="r" from="35" to="55" dur="2s" begin="1s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" from="0.6" to="0" dur="2s" begin="1s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Central worker node -->
+  <circle cx="100" cy="100" r="30" fill="#4dabf7" stroke="#339af0" stroke-width="3"/>
+  <circle cx="100" cy="100" r="20" fill="#1971c2" opacity="0.3"/>
+
+  <!-- Worker icon in center -->
+  <g transform="translate(100, 100)">
+    <!-- Simplified gear/worker symbol -->
+    <circle r="10" fill="#fff"/>
+    <path d="M 0,-10 L 2,-7 L 0,-4 L -2,-7 Z" fill="#fff"/>
+    <path d="M 0,10 L 2,7 L 0,4 L -2,7 Z" fill="#fff"/>
+    <path d="M -10,0 L -7,2 L -4,0 L -7,-2 Z" fill="#fff"/>
+    <path d="M 10,0 L 7,2 L 4,0 L 7,-2 Z" fill="#fff"/>
+  </g>
+
+  <!-- Client nodes (tabs) -->
+  <!-- Top left -->
+  <circle cx="40" cy="45" r="15" fill="#51cf66" stroke="#37b24d" stroke-width="2"/>
+  <rect x="35" y="40" width="10" height="10" fill="#fff" opacity="0.7" rx="1"/>
+
+  <!-- Top right -->
+  <circle cx="160" cy="60" r="15" fill="#51cf66" stroke="#37b24d" stroke-width="2"/>
+  <rect x="155" y="55" width="10" height="10" fill="#fff" opacity="0.7" rx="1"/>
+
+  <!-- Bottom left -->
+  <circle cx="55" cy="155" r="15" fill="#51cf66" stroke="#37b24d" stroke-width="2"/>
+  <rect x="50" y="150" width="10" height="10" fill="#fff" opacity="0.7" rx="1"/>
+
+  <!-- Bottom right -->
+  <circle cx="145" cy="145" r="15" fill="#51cf66" stroke="#37b24d" stroke-width="2"/>
+  <rect x="140" y="140" width="10" height="10" fill="#fff" opacity="0.7" rx="1"/>
+
+  <!-- Activity indicators on client nodes -->
+  <circle cx="48" cy="43" r="3" fill="#51cf66">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="168" cy="58" r="3" fill="#51cf66">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" begin="0.3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="63" cy="153" r="3" fill="#51cf66">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" begin="0.6s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="153" cy="143" r="3" fill="#51cf66">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" begin="0.9s" repeatCount="indefinite"/>
+  </circle>
+</svg>

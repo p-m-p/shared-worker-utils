@@ -1,5 +1,12 @@
 <div align="center">
 
+<table align="center">
+<tr>
+<td width="200" align="center">
+<img src="./logo.svg" alt="shared-worker-utils logo" width="150"/>
+</td>
+<td align="left">
+
 # shared-worker-utils
 
 [![npm version](https://img.shields.io/npm/v/shared-worker-utils.svg)](https://www.npmjs.com/package/shared-worker-utils)
@@ -7,6 +14,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./packages/shared-worker-utils/LICENSE)
 
 A lightweight TypeScript library for managing SharedWorker port connections with automatic heartbeat, visibility tracking, and resource optimization.
+
+</td>
+</tr>
+</table>
 
 </div>
 
