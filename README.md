@@ -1,6 +1,9 @@
 <div align="center">
-
+<div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+<div>
 <img src="./logo.svg" alt="shared-worker-utils logo" width="200"/>
+</div>
+<div align="left">
 
 # shared-worker-utils
 
@@ -10,6 +13,8 @@
 
 A lightweight TypeScript library for managing SharedWorker port connections with automatic heartbeat, visibility tracking, and resource optimization.
 
+</div>
+</div>
 </div>
 
 ## Features
