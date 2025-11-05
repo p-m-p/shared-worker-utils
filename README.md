@@ -1,11 +1,11 @@
 <div align="center">
 
-<table>
+<table border="0">
 <tr>
-<td valign="center">
+<td valign="middle" width="220">
 <img src="./logo.svg" alt="shared-worker-utils logo" width="200"/>
 </td>
-<td valign="center">
+<td valign="middle">
 
 # shared-worker-utils
 
