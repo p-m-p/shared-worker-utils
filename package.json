@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "pnpm --filter example dev",
     "server": "pnpm --filter example run server",
-    "build": "pnpm -r build",
-    "test": "pnpm -r test",
+    "build": "pnpm -r --if-present build",
+    "test": "pnpm -r --if-present test",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
