@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "pnpm --filter example dev",
     "server": "pnpm --filter example run server",
-    "build": "pnpm --filter shared-worker-utils build && pnpm --filter example build",
-    "test": "pnpm --filter shared-worker-utils test",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
