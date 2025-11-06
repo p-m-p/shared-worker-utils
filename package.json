@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "pnpm -r --if-present dev",
     "server": "pnpm -r --if-present run server",
-    "build": "pnpm -r build",
+    "build": "pnpm -r --if-present build",
     "test": "pnpm -r --if-present test",
     "lint": "eslint .",
     "format": "prettier --write ."
