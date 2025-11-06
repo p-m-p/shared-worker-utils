@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter example dev",
-    "server": "pnpm --filter example run server",
-    "build": "pnpm --filter shared-worker-utils build && pnpm --filter example build",
-    "test": "pnpm --filter shared-worker-utils test",
+    "dev": "pnpm -r --if-present dev",
+    "server": "pnpm -r --if-present run server",
+    "build": "pnpm -r build",
+    "test": "pnpm -r --if-present test",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
