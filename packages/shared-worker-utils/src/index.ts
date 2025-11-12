@@ -10,4 +10,6 @@ export type {
   PingMessage,
   PongMessage,
   InternalMessage,
+  LogEntry,
+  LogLevel,
 } from './types'

@@ -1,4 +1,4 @@
-import type { SharedWorkerClientOptions } from './types'
+import type { SharedWorkerClientOptions, LogEntry } from './types'
 
 /**
  * Client-side SharedWorker connection manager
@@ -8,7 +8,7 @@ import type { SharedWorkerClientOptions } from './types'
 export class SharedWorkerClient<TMessage = unknown> {
   private port: MessagePort
   private onMessage: (message: TMessage) => void
-  private onLog?: (message: string, ...parameters: unknown[]) => void
+  private onLog?: (logEntry: LogEntry) => void
   private isTabVisible: boolean
 
   constructor(
@@ -26,8 +26,10 @@ export class SharedWorkerClient<TMessage = unknown> {
 
     this.port.start()
 
-    this.log('Connected to SharedWorker')
-    this.log(`Tab visibility: ${this.isTabVisible ? 'visible' : 'hidden'}`)
+    this.log('Connected to SharedWorker', 'info')
+    this.log('Tab visibility initialized', 'info', {
+      visible: this.isTabVisible,
+    })
   }
 
   /**
@@ -57,7 +59,7 @@ export class SharedWorkerClient<TMessage = unknown> {
 
     // Handle internal ping messages
     if (message.type === '@shared-worker-utils/ping') {
-      this.log('Received ping from SharedWorker, sending pong')
+      this.log('Received ping from SharedWorker, sending pong', 'debug')
       this.send({ type: '@shared-worker-utils/pong' })
       return
     }
@@ -84,9 +86,9 @@ export class SharedWorkerClient<TMessage = unknown> {
     this.isTabVisible = !document.hidden
 
     if (wasVisible !== this.isTabVisible) {
-      this.log(
-        `Tab visibility changed: ${this.isTabVisible ? 'visible' : 'hidden'}`
-      )
+      this.log('Tab visibility changed', 'info', {
+        visible: this.isTabVisible,
+      })
 
       // Notify SharedWorker of visibility change
       this.send({
@@ -106,7 +108,15 @@ export class SharedWorkerClient<TMessage = unknown> {
     })
   }
 
-  private log(message: string, ...parameters: unknown[]): void {
-    this.onLog?.(`[SharedWorkerClient] ${message}`, ...parameters)
+  private log(
+    message: string,
+    level: LogEntry['level'],
+    context?: Record<string, unknown>
+  ): void {
+    this.onLog?.({
+      message: `[SharedWorkerClient] ${message}`,
+      level,
+      context,
+    })
   }
 }

@@ -1,4 +1,4 @@
-import type { PortManagerOptions, ClientState } from './types'
+import type { PortManagerOptions, ClientState, LogEntry } from './types'
 
 /**
  * Manages MessagePort connections in a SharedWorker
@@ -14,7 +14,7 @@ export class PortManager<TMessage = unknown> {
     totalCount: number
   ) => void
   private onMessage?: (port: MessagePort, message: TMessage) => void
-  private onLog?: (message: string, ...parameters: unknown[]) => void
+  private onLog?: (logEntry: LogEntry) => void
   private pingIntervalId: ReturnType<typeof setInterval>
 
   constructor(options: PortManagerOptions<TMessage> = {}) {
@@ -30,7 +30,7 @@ export class PortManager<TMessage = unknown> {
       this.pingInterval
     )
 
-    this.log('PortManager initialized')
+    this.log('PortManager initialized', 'info')
   }
 
   /**
@@ -38,7 +38,9 @@ export class PortManager<TMessage = unknown> {
    */
   handleConnect(port: MessagePort): void {
     this.clients.set(port, { visible: true, lastPong: Date.now() })
-    this.log(`New client connected. Total clients: ${this.clients.size}`)
+    this.log('New client connected', 'info', {
+      totalClients: this.clients.size,
+    })
 
     this.updateClientCount()
 
@@ -81,7 +83,7 @@ export class PortManager<TMessage = unknown> {
 
     // Re-add client if it was removed (e.g., after computer sleep)
     if (!client) {
-      this.log('Reconnecting previously removed client')
+      this.log('Reconnecting previously removed client', 'info')
       client = { visible: true, lastPong: Date.now() }
       this.clients.set(port, client)
       this.updateClientCount()
@@ -93,21 +95,25 @@ export class PortManager<TMessage = unknown> {
     switch (message.type) {
       case '@shared-worker-utils/visibility-change': {
         client.visible = message.visible ?? true
-        this.log(`Client visibility changed: ${message.visible}`)
+        this.log('Client visibility changed', 'info', {
+          visible: message.visible,
+        })
         this.updateClientCount()
 
         break
       }
       case '@shared-worker-utils/disconnect': {
         this.clients.delete(port)
-        this.log(`Client disconnected. Remaining clients: ${this.clients.size}`)
+        this.log('Client disconnected', 'info', {
+          remainingClients: this.clients.size,
+        })
         this.updateClientCount()
 
         break
       }
       case '@shared-worker-utils/pong': {
         client.lastPong = Date.now()
-        this.log('Received pong from client')
+        this.log('Received pong from client', 'debug')
 
         break
       }
@@ -130,16 +136,17 @@ export class PortManager<TMessage = unknown> {
         removedCount++
       } else {
         // Send ping
-        this.log('Sending ping to client')
+        this.log('Sending ping to client', 'debug')
         port.postMessage({ type: '@shared-worker-utils/ping' })
       }
     }
 
     // Update connection state if any ports were removed
     if (removedCount > 0) {
-      this.log(
-        `Removed ${removedCount} stale client(s). Remaining clients: ${this.clients.size}`
-      )
+      this.log('Removed stale client(s)', 'info', {
+        removedCount,
+        remainingClients: this.clients.size,
+      })
       this.updateClientCount()
     }
   }
@@ -148,7 +155,10 @@ export class PortManager<TMessage = unknown> {
     const activeCount = this.getActiveCount()
     const totalCount = this.getTotalCount()
 
-    this.log(`Active clients: ${activeCount} / ${totalCount} total`)
+    this.log('Active clients updated', 'debug', {
+      activeCount,
+      totalCount,
+    })
 
     // Broadcast client count to all clients
     this.broadcast({
@@ -161,8 +171,16 @@ export class PortManager<TMessage = unknown> {
     this.onActiveCountChange?.(activeCount, totalCount)
   }
 
-  private log(message: string, ...parameters: unknown[]): void {
-    this.onLog?.(`[PortManager] ${message}`, ...parameters)
+  private log(
+    message: string,
+    level: LogEntry['level'],
+    context?: Record<string, unknown>
+  ): void {
+    this.onLog?.({
+      message: `[PortManager] ${message}`,
+      level,
+      context,
+    })
   }
 
   /**
@@ -171,6 +189,6 @@ export class PortManager<TMessage = unknown> {
   destroy(): void {
     clearInterval(this.pingIntervalId)
     this.clients.clear()
-    this.log('PortManager destroyed')
+    this.log('PortManager destroyed', 'info')
   }
 }

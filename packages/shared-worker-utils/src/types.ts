@@ -1,3 +1,28 @@
+/**
+ * Log levels for structured logging
+ */
+export type LogLevel = 'info' | 'debug' | 'warn' | 'error'
+
+/**
+ * Structured log entry
+ */
+export interface LogEntry {
+  /**
+   * The log message
+   */
+  message: string
+
+  /**
+   * The log level
+   */
+  level: LogLevel
+
+  /**
+   * Optional context data
+   */
+  context?: Record<string, unknown>
+}
+
 export interface PortManagerOptions<TMessage = unknown> {
   /**
    * Interval between ping messages in milliseconds
@@ -23,9 +48,9 @@ export interface PortManagerOptions<TMessage = unknown> {
   onMessage?: (port: MessagePort, message: TMessage) => void
 
   /**
-   * Callback for internal logging
+   * Callback for internal logging with structured log entries
    */
-  onLog?: (message: string, ...parameters: unknown[]) => void
+  onLog?: (logEntry: LogEntry) => void
 }
 
 export interface SharedWorkerClientOptions<TMessage = unknown> {
@@ -36,9 +61,9 @@ export interface SharedWorkerClientOptions<TMessage = unknown> {
   onMessage: (message: TMessage) => void
 
   /**
-   * Callback for internal logging
+   * Callback for internal logging with structured log entries
    */
-  onLog?: (message: string, ...parameters: unknown[]) => void
+  onLog?: (logEntry: LogEntry) => void
 }
 
 export interface ClientState {

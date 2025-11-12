@@ -103,12 +103,15 @@ describe('SharedWorkerClient', () => {
       { onMessage, onLog }
     )
 
-    expect(onLog).toHaveBeenCalledWith(
-      '[SharedWorkerClient] Connected to SharedWorker'
-    )
-    expect(onLog).toHaveBeenCalledWith(
-      '[SharedWorkerClient] Tab visibility: visible'
-    )
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[SharedWorkerClient] Connected to SharedWorker',
+      level: 'info',
+    })
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[SharedWorkerClient] Tab visibility initialized',
+      level: 'info',
+      context: { visible: true },
+    })
   })
 
   it('should report correct initial visibility', () => {
@@ -136,9 +139,11 @@ describe('SharedWorkerClient', () => {
 
     const lastMessage = mockWorker.port.getLastMessage()
     expect(lastMessage).toEqual({ type: '@shared-worker-utils/pong' })
-    expect(onLog).toHaveBeenCalledWith(
-      '[SharedWorkerClient] Received ping from SharedWorker, sending pong'
-    )
+    expect(onLog).toHaveBeenCalledWith({
+      message:
+        '[SharedWorkerClient] Received ping from SharedWorker, sending pong',
+      level: 'debug',
+    })
   })
 
   it('should pass non-internal messages to onMessage callback', () => {
@@ -217,9 +222,11 @@ describe('SharedWorkerClient', () => {
       visible: false,
     })
     expect(portWrapper.isVisible()).toBe(false)
-    expect(onLog).toHaveBeenCalledWith(
-      '[SharedWorkerClient] Tab visibility changed: hidden'
-    )
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[SharedWorkerClient] Tab visibility changed',
+      level: 'info',
+      context: { visible: false },
+    })
   })
 
   it('should send visibility change when tab becomes visible', () => {
@@ -246,9 +253,11 @@ describe('SharedWorkerClient', () => {
       visible: true,
     })
     expect(portWrapper.isVisible()).toBe(true)
-    expect(onLog).toHaveBeenCalledWith(
-      '[SharedWorkerClient] Tab visibility changed: visible'
-    )
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[SharedWorkerClient] Tab visibility changed',
+      level: 'info',
+      context: { visible: true },
+    })
   })
 
   it('should not send visibility change if visibility does not actually change', () => {
