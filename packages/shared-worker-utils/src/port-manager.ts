@@ -179,7 +179,7 @@ export class PortManager<TMessage = unknown> {
     this.onLog?.({
       message: `[PortManager] ${message}`,
       level,
-      context,
+      ...(context !== undefined && { context }),
     })
   }
 
