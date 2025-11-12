@@ -1,20 +1,21 @@
-import type { SharedWorkerClientOptions, LogEntry } from './types'
+import { Logger } from './logger'
+import type { SharedWorkerClientOptions } from './types'
 
 /**
  * Client-side SharedWorker connection manager
  * Handles visibility tracking, ping/pong responses, and cleanup
  * @template TMessage - The type of application messages (non-internal messages)
  */
-export class SharedWorkerClient<TMessage = unknown> {
+export class SharedWorkerClient<TMessage = unknown> extends Logger {
   private port: MessagePort
   private onMessage: (message: TMessage) => void
-  private onLog?: (logEntry: LogEntry) => void
   private isTabVisible: boolean
 
   constructor(
     worker: SharedWorker,
     options: SharedWorkerClientOptions<TMessage>
   ) {
+    super()
     this.port = worker.port
     this.onMessage = options.onMessage
     this.onLog = options.onLog
@@ -108,15 +109,7 @@ export class SharedWorkerClient<TMessage = unknown> {
     })
   }
 
-  private log(
-    message: string,
-    level: LogEntry['level'],
-    context?: Record<string, unknown>
-  ): void {
-    this.onLog?.({
-      message: `[SharedWorkerClient] ${message}`,
-      level,
-      ...(context !== undefined && { context }),
-    })
+  protected getLogPrefix(): string {
+    return '[SharedWorkerClient]'
   }
 }

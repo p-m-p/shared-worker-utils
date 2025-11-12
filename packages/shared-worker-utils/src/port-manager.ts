@@ -1,11 +1,12 @@
-import type { PortManagerOptions, ClientState, LogEntry } from './types'
+import { Logger } from './logger'
+import type { PortManagerOptions, ClientState } from './types'
 
 /**
  * Manages MessagePort connections in a SharedWorker
  * Handles ping/pong heartbeat, visibility tracking, and message broadcasting
  * @template TMessage - The type of application messages (non-internal messages)
  */
-export class PortManager<TMessage = unknown> {
+export class PortManager<TMessage = unknown> extends Logger {
   private clients: Map<MessagePort, ClientState> = new Map()
   private pingInterval: number
   private pingTimeout: number
@@ -14,10 +15,10 @@ export class PortManager<TMessage = unknown> {
     totalCount: number
   ) => void
   private onMessage?: (port: MessagePort, message: TMessage) => void
-  private onLog?: (logEntry: LogEntry) => void
   private pingIntervalId: ReturnType<typeof setInterval>
 
   constructor(options: PortManagerOptions<TMessage> = {}) {
+    super()
     this.pingInterval = options.pingInterval ?? 10_000
     this.pingTimeout = options.pingTimeout ?? 5000
     this.onActiveCountChange = options.onActiveCountChange
@@ -171,16 +172,8 @@ export class PortManager<TMessage = unknown> {
     this.onActiveCountChange?.(activeCount, totalCount)
   }
 
-  private log(
-    message: string,
-    level: LogEntry['level'],
-    context?: Record<string, unknown>
-  ): void {
-    this.onLog?.({
-      message: `[PortManager] ${message}`,
-      level,
-      ...(context !== undefined && { context }),
-    })
+  protected getLogPrefix(): string {
+    return '[PortManager]'
   }
 
   /**
