@@ -116,7 +116,7 @@ export class SharedWorkerClient<TMessage = unknown> {
     this.onLog?.({
       message: `[SharedWorkerClient] ${message}`,
       level,
-      context,
+      ...(context !== undefined && { context }),
     })
   }
 }
