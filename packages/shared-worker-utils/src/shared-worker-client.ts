@@ -1,3 +1,4 @@
+import { Logger } from './logger'
 import type { SharedWorkerClientOptions } from './types'
 
 /**
@@ -5,16 +6,16 @@ import type { SharedWorkerClientOptions } from './types'
  * Handles visibility tracking, ping/pong responses, and cleanup
  * @template TMessage - The type of application messages (non-internal messages)
  */
-export class SharedWorkerClient<TMessage = unknown> {
+export class SharedWorkerClient<TMessage = unknown> extends Logger {
   private port: MessagePort
   private onMessage: (message: TMessage) => void
-  private onLog?: (message: string, ...parameters: unknown[]) => void
   private isTabVisible: boolean
 
   constructor(
     worker: SharedWorker,
     options: SharedWorkerClientOptions<TMessage>
   ) {
+    super()
     this.port = worker.port
     this.onMessage = options.onMessage
     this.onLog = options.onLog
@@ -26,8 +27,10 @@ export class SharedWorkerClient<TMessage = unknown> {
 
     this.port.start()
 
-    this.log('Connected to SharedWorker')
-    this.log(`Tab visibility: ${this.isTabVisible ? 'visible' : 'hidden'}`)
+    this.log('Connected to SharedWorker', 'info')
+    this.log('Tab visibility initialized', 'info', {
+      visible: this.isTabVisible,
+    })
   }
 
   /**
@@ -57,7 +60,7 @@ export class SharedWorkerClient<TMessage = unknown> {
 
     // Handle internal ping messages
     if (message.type === '@shared-worker-utils/ping') {
-      this.log('Received ping from SharedWorker, sending pong')
+      this.log('Received ping from SharedWorker, sending pong', 'debug')
       this.send({ type: '@shared-worker-utils/pong' })
       return
     }
@@ -84,9 +87,9 @@ export class SharedWorkerClient<TMessage = unknown> {
     this.isTabVisible = !document.hidden
 
     if (wasVisible !== this.isTabVisible) {
-      this.log(
-        `Tab visibility changed: ${this.isTabVisible ? 'visible' : 'hidden'}`
-      )
+      this.log('Tab visibility changed', 'info', {
+        visible: this.isTabVisible,
+      })
 
       // Notify SharedWorker of visibility change
       this.send({
@@ -106,7 +109,7 @@ export class SharedWorkerClient<TMessage = unknown> {
     })
   }
 
-  private log(message: string, ...parameters: unknown[]): void {
-    this.onLog?.(`[SharedWorkerClient] ${message}`, ...parameters)
+  protected getLogPrefix(): string {
+    return '[SharedWorkerClient]'
   }
 }

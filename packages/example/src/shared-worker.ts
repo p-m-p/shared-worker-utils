@@ -1,5 +1,5 @@
 // SharedWorker to manage a single WebSocket connection across multiple tabs
-import { PortManager } from 'shared-worker-utils'
+import { PortManager, type LogEntry } from 'shared-worker-utils'
 
 // Declare SharedWorker global
 declare const self: SharedWorkerGlobalScope
@@ -12,8 +12,13 @@ const WEBSOCKET_URL = 'ws://localhost:8080'
 let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 const RECONNECT_DELAY = 3000
 
-function log(message: string, ...parameters: unknown[]) {
-  console.log(message, ...parameters)
+function log(logEntry: LogEntry) {
+  const contextString = logEntry.context
+    ? ` ${JSON.stringify(logEntry.context)}`
+    : ''
+  console.log(
+    `[${logEntry.level.toUpperCase()}] ${logEntry.message}${contextString}`
+  )
 }
 
 // Initialize PortManager with typed messages
@@ -23,10 +28,17 @@ const portManager = new PortManager<AppMessage>({
   onActiveCountChange: (activeCount, totalCount) => {
     // Manage WebSocket connection based on active clients
     if (activeCount === 0 && socket) {
-      log('[WebSocket] No active clients, pausing WebSocket connection')
+      log({
+        message: '[WebSocket] No active clients, pausing WebSocket connection',
+        level: 'info',
+      })
       disconnectWebSocket()
     } else if (activeCount > 0 && !socket) {
-      log('[WebSocket] Active client detected, resuming WebSocket connection')
+      log({
+        message:
+          '[WebSocket] Active client detected, resuming WebSocket connection',
+        level: 'info',
+      })
       connectWebSocket()
     }
 
@@ -52,15 +64,24 @@ function connectWebSocket() {
     (socket.readyState === WebSocket.CONNECTING ||
       socket.readyState === WebSocket.OPEN)
   ) {
-    log('[WebSocket] Already connected or connecting')
+    log({
+      message: '[WebSocket] Already connected or connecting',
+      level: 'info',
+    })
     return
   }
 
-  log('[WebSocket] Connecting to server...')
+  log({
+    message: '[WebSocket] Connecting to server...',
+    level: 'info',
+  })
   socket = new WebSocket(WEBSOCKET_URL)
 
   socket.addEventListener('open', () => {
-    log('[WebSocket] Connected')
+    log({
+      message: '[WebSocket] Connected',
+      level: 'info',
+    })
 
     // Notify all connected clients
     portManager.broadcast({
@@ -72,7 +93,11 @@ function connectWebSocket() {
   socket.addEventListener('message', (event) => {
     try {
       const data = JSON.parse(event.data)
-      log('[WebSocket] Received message:', data.type)
+      log({
+        message: '[WebSocket] Received message',
+        level: 'debug',
+        context: { type: data.type },
+      })
 
       // Broadcast message to all connected clients
       portManager.broadcast(data)
@@ -82,7 +107,10 @@ function connectWebSocket() {
   })
 
   socket.addEventListener('close', () => {
-    log('[WebSocket] Disconnected')
+    log({
+      message: '[WebSocket] Disconnected',
+      level: 'info',
+    })
     socket = undefined
 
     // Notify all connected clients
@@ -95,12 +123,17 @@ function connectWebSocket() {
     const activeCount = portManager.getActiveCount()
 
     if (activeCount > 0) {
-      log(
-        `[WebSocket] Reconnecting in ${RECONNECT_DELAY}ms... (${activeCount} active clients)`
-      )
+      log({
+        message: '[WebSocket] Reconnecting...',
+        level: 'info',
+        context: { delayMs: RECONNECT_DELAY, activeClients: activeCount },
+      })
       reconnectTimeout = setTimeout(connectWebSocket, RECONNECT_DELAY)
     } else {
-      log('[WebSocket] No active clients, staying disconnected')
+      log({
+        message: '[WebSocket] No active clients, staying disconnected',
+        level: 'info',
+      })
     }
   })
 
@@ -116,7 +149,10 @@ function disconnectWebSocket() {
   }
 
   if (socket) {
-    log('[WebSocket] Disconnecting')
+    log({
+      message: '[WebSocket] Disconnecting',
+      level: 'info',
+    })
     socket.close()
     socket = undefined
   }
@@ -145,4 +181,7 @@ self.addEventListener('connect', (event: MessageEvent) => {
   }
 })
 
-log('[SharedWorker] Initialized')
+log({
+  message: '[SharedWorker] Initialized',
+  level: 'info',
+})

@@ -62,9 +62,11 @@ describe('PortManager', () => {
 
     expect(portManager.getTotalCount()).toBe(1)
     expect(portManager.getActiveCount()).toBe(1)
-    expect(onLog).toHaveBeenCalledWith(
-      '[PortManager] New client connected. Total clients: 1'
-    )
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[PortManager] New client connected',
+      level: 'info',
+      context: { totalClients: 1 },
+    })
   })
 
   it('should broadcast client count on connect', () => {
@@ -141,7 +143,10 @@ describe('PortManager', () => {
     expect((mockPort as unknown as MessagePort).lastMessage).toEqual({
       type: '@shared-worker-utils/ping',
     })
-    expect(onLog).toHaveBeenCalledWith('[PortManager] Sending ping to client')
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[PortManager] Sending ping to client',
+      level: 'debug',
+    })
   })
 
   it('should handle pong responses', () => {
@@ -153,9 +158,10 @@ describe('PortManager', () => {
 
     mockPort.simulateMessage({ type: '@shared-worker-utils/pong' })
 
-    expect(onLog).toHaveBeenCalledWith(
-      '[PortManager] Received pong from client'
-    )
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[PortManager] Received pong from client',
+      level: 'debug',
+    })
   })
 
   it('should remove stale clients that do not respond to ping', () => {
@@ -177,9 +183,11 @@ describe('PortManager', () => {
     vi.advanceTimersByTime(pingTimeout + pingInterval)
 
     expect(portManager.getTotalCount()).toBe(0)
-    expect(onLog).toHaveBeenCalledWith(
-      expect.stringContaining('Removed 1 stale client(s)')
-    )
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[PortManager] Removed stale client(s)',
+      level: 'info',
+      context: { removedCount: 1, remainingClients: 0 },
+    })
   })
 
   it('should not remove clients that respond to ping', () => {
@@ -223,9 +231,10 @@ describe('PortManager', () => {
     mockPort.simulateMessage({ type: '@shared-worker-utils/pong' })
 
     expect(portManager.getTotalCount()).toBe(1)
-    expect(onLog).toHaveBeenCalledWith(
-      '[PortManager] Reconnecting previously removed client'
-    )
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[PortManager] Reconnecting previously removed client',
+      level: 'info',
+    })
   })
 
   it('should call onActiveCountChange callback', () => {
