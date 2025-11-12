@@ -104,8 +104,14 @@ const portManager = new PortManager<ClientMessage>({
       console.log('Data requested:', message.id)
     }
   },
-  onLog: (message, ...args) => {
-    console.log(message, ...args)
+  onLog: (logEntry) => {
+    // Structured logging with level, message, and optional context
+    const contextStr = logEntry.context
+      ? ` ${JSON.stringify(logEntry.context)}`
+      : ''
+    console.log(
+      `[${logEntry.level.toUpperCase()}] ${logEntry.message}${contextStr}`
+    )
   },
 })
 
@@ -152,8 +158,9 @@ const client = new SharedWorkerClient<WorkerMessage>(worker, {
         break
     }
   },
-  onLog: (message, ...args) => {
-    console.log(message, ...args)
+  onLog: (logEntry) => {
+    // Structured logging with level, message, and optional context
+    console.log(`[${logEntry.level.toUpperCase()}] ${logEntry.message}`)
   },
 })
 
@@ -191,8 +198,20 @@ interface PortManagerOptions<TMessage = unknown> {
   /** Callback for messages from clients */
   onMessage?: (port: MessagePort, message: TMessage) => void
 
-  /** Callback for internal logging */
-  onLog?: (message: string, ...args: unknown[]) => void
+  /** Callback for internal logging with structured log entries */
+  onLog?: (logEntry: LogEntry) => void
+}
+
+/**
+ * Structured log entry
+ */
+interface LogEntry {
+  /** The log message */
+  message: string
+  /** The log level: 'info' | 'debug' | 'warn' | 'error' */
+  level: LogLevel
+  /** Optional context data */
+  context?: Record<string, unknown>
 }
 ```
 
@@ -215,8 +234,8 @@ interface SharedWorkerClientOptions<TMessage = unknown> {
   /** Callback for messages from SharedWorker */
   onMessage: (message: TMessage) => void
 
-  /** Callback for internal logging */
-  onLog?: (message: string, ...args: unknown[]) => void
+  /** Callback for internal logging with structured log entries */
+  onLog?: (logEntry: LogEntry) => void
 }
 ```
 
@@ -225,6 +244,71 @@ interface SharedWorkerClientOptions<TMessage = unknown> {
 - `send(message: unknown): void` - Send a message to the SharedWorker
 - `disconnect(): void` - Disconnect from the SharedWorker
 - `isVisible(): boolean` - Check if the tab is currently visible
+
+## Structured Logging
+
+The library uses structured logging to provide better integration with logging systems and improved queryability. The `onLog` callback receives a `LogEntry` object with the following structure:
+
+```typescript
+interface LogEntry {
+  message: string // The log message (e.g., "[PortManager] New client connected")
+  level: 'info' | 'debug' | 'warn' | 'error' // The log level
+  context?: Record<string, unknown> // Optional contextual data
+}
+```
+
+### Log Levels
+
+- **`info`**: Important state changes (connections, disconnections, initialization)
+- **`debug`**: Routine operations (ping/pong messages, count updates)
+- **`warn`**: Warnings (not currently used)
+- **`error`**: Errors (not currently used)
+
+### Example Usage
+
+```typescript
+const portManager = new PortManager({
+  onLog: (logEntry) => {
+    // Send to a logging service
+    logger.log({
+      level: logEntry.level,
+      message: logEntry.message,
+      ...logEntry.context,
+      timestamp: new Date().toISOString(),
+    })
+
+    // Or format for console
+    const contextStr = logEntry.context
+      ? ` ${JSON.stringify(logEntry.context)}`
+      : ''
+    console.log(`[${logEntry.level.toUpperCase()}] ${logEntry.message}${contextStr}`)
+  },
+})
+```
+
+### Example Log Entries
+
+```typescript
+// Connection event with context
+{
+  message: "[PortManager] New client connected",
+  level: "info",
+  context: { totalClients: 3 }
+}
+
+// Visibility change with context
+{
+  message: "[PortManager] Client visibility changed",
+  level: "info",
+  context: { visible: false }
+}
+
+// Debug message
+{
+  message: "[PortManager] Sending ping to client",
+  level: "debug"
+}
+```
 
 ## How It Works
 

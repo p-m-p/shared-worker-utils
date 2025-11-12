@@ -181,7 +181,9 @@ Then open http://localhost:5173 in multiple tabs!
 - `pingTimeout?: number` - Max time to wait for pong response (default: 5000ms)
 - `onActiveCountChange?: (activeCount: number, totalCount: number) => void` - Callback when client counts change
 - `onMessage?: (port: MessagePort, message: TMessage) => void` - Callback for messages from clients
-- `onLog?: (message: string, ...args: unknown[]) => void` - Callback for internal logging
+- `onLog?: (logEntry: LogEntry) => void` - Callback for internal logging with structured log entries
+  - `LogEntry` has properties: `message: string`, `level: LogLevel`, `context?: Record<string, unknown>`
+  - `LogLevel` is one of: `'info'`, `'debug'`, `'warn'`, `'error'`
 
 **Methods:**
 
@@ -196,7 +198,7 @@ Then open http://localhost:5173 in multiple tabs!
 **Constructor Options:**
 
 - `onMessage: (message: TMessage) => void` - Callback for messages from SharedWorker (required)
-- `onLog?: (message: string, ...args: unknown[]) => void` - Callback for internal logging
+- `onLog?: (logEntry: LogEntry) => void` - Callback for internal logging with structured log entries
 
 **Methods:**
 
