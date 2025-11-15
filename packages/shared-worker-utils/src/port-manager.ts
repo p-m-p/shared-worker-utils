@@ -1,5 +1,6 @@
 import { Logger } from './logger'
-import type { PortManagerOptions, ClientState } from './types'
+import { PortRegistry } from './port/registry'
+import type { PortManagerOptions } from './types'
 
 /**
  * Manages MessagePort connections in a SharedWorker
@@ -7,7 +8,7 @@ import type { PortManagerOptions, ClientState } from './types'
  * @template TMessage - The type of application messages (non-internal messages)
  */
 export class PortManager<TMessage = unknown> extends Logger {
-  private clients: Map<MessagePort, ClientState> = new Map()
+  private registry: PortRegistry<MessagePort> = new PortRegistry()
   private pingInterval: number
   private pingTimeout: number
   private onActiveCountChange?: (
@@ -38,25 +39,23 @@ export class PortManager<TMessage = unknown> extends Logger {
    * Handle a new port connection
    */
   handleConnect(port: MessagePort): void {
-    const controller = new AbortController()
-    this.clients.set(port, {
-      visible: true,
-      lastPong: Date.now(),
-      controller,
-    })
+    this.registry.register(port)
     this.log('New client connected', 'info', {
-      totalClients: this.clients.size,
+      totalClients: this.registry.size(),
     })
 
     this.updateClientCount()
 
-    port.addEventListener(
-      'message',
-      (event) => {
-        this.handleMessage(port, event.data)
-      },
-      { signal: controller.signal }
-    )
+    const state = this.registry.get(port)
+    if (state) {
+      port.addEventListener(
+        'message',
+        (event) => {
+          this.handleMessage(port, event.data)
+        },
+        { signal: state.controller.signal }
+      )
+    }
 
     port.start()
   }
@@ -65,7 +64,7 @@ export class PortManager<TMessage = unknown> extends Logger {
    * Broadcast a message to all connected clients
    */
   broadcast(message: unknown): void {
-    for (const [port] of this.clients) {
+    for (const [port] of this.registry.entries()) {
       port.postMessage(message)
     }
   }
@@ -74,29 +73,24 @@ export class PortManager<TMessage = unknown> extends Logger {
    * Get the number of active (visible) clients
    */
   getActiveCount(): number {
-    let count = 0
-    for (const client of this.clients.values()) {
-      if (client.visible) count++
-    }
-    return count
+    return this.registry.countVisible()
   }
 
   /**
    * Get the total number of connected clients
    */
   getTotalCount(): number {
-    return this.clients.size
+    return this.registry.size()
   }
 
   private handleMessage(port: MessagePort, data: unknown): void {
-    let client = this.clients.get(port)
+    let client = this.registry.get(port)
 
     // Re-add client if it was removed (e.g., after computer sleep)
     if (!client) {
       this.log('Reconnecting previously removed client', 'info')
-      const controller = new AbortController()
-      client = { visible: true, lastPong: Date.now(), controller }
-      this.clients.set(port, client)
+      this.registry.register(port)
+      client = this.registry.get(port)
       this.updateClientCount()
     }
 
@@ -105,28 +99,30 @@ export class PortManager<TMessage = unknown> extends Logger {
 
     switch (message.type) {
       case '@shared-worker-utils/visibility-change': {
-        client.visible = message.visible ?? true
-        this.log('Client visibility changed', 'info', {
-          visible: message.visible,
-        })
-        this.updateClientCount()
+        if (client) {
+          client.visible = message.visible ?? true
+          this.log('Client visibility changed', 'info', {
+            visible: message.visible,
+          })
+          this.updateClientCount()
+        }
 
         break
       }
       case '@shared-worker-utils/disconnect': {
-        const disconnectingClient = this.clients.get(port)
-        disconnectingClient?.controller.abort()
-        this.clients.delete(port)
+        this.registry.unregister(port)
         this.log('Client disconnected', 'info', {
-          remainingClients: this.clients.size,
+          remainingClients: this.registry.size(),
         })
         this.updateClientCount()
 
         break
       }
       case '@shared-worker-utils/pong': {
-        client.lastPong = Date.now()
-        this.log('Received pong from client', 'debug')
+        if (client) {
+          client.lastPong = Date.now()
+          this.log('Received pong from client', 'debug')
+        }
 
         break
       }
@@ -142,11 +138,10 @@ export class PortManager<TMessage = unknown> extends Logger {
     let removedCount = 0
     const staleThreshold = this.pingInterval + this.pingTimeout
 
-    for (const [port, client] of this.clients) {
+    for (const [port, client] of this.registry.entries()) {
       // Remove port if it hasn't responded to the last ping
       if (now - client.lastPong > staleThreshold) {
-        client.controller.abort()
-        this.clients.delete(port)
+        this.registry.unregister(port)
         removedCount++
       } else {
         // Send ping
@@ -159,7 +154,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     if (removedCount > 0) {
       this.log('Removed stale client(s)', 'info', {
         removedCount,
-        remainingClients: this.clients.size,
+        remainingClients: this.registry.size(),
       })
       this.updateClientCount()
     }
@@ -194,11 +189,7 @@ export class PortManager<TMessage = unknown> extends Logger {
    */
   destroy(): void {
     clearInterval(this.pingIntervalId)
-    // Abort all client controllers before clearing
-    for (const client of this.clients.values()) {
-      client.controller.abort()
-    }
-    this.clients.clear()
+    this.registry.clear()
     this.log('PortManager destroyed', 'info')
   }
 }

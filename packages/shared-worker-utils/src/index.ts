@@ -1,5 +1,7 @@
 export { PortManager } from './port-manager'
 export { SharedWorkerClient } from './shared-worker-client'
+export { PortRegistry } from './port/registry'
+export { Connection } from './port/connection'
 export type {
   PortManagerOptions,
   SharedWorkerClientOptions,
