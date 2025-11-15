@@ -1,5 +1,9 @@
 import { Logger } from './logger'
-import type { PortManagerOptions, ClientState } from './types'
+import { Broadcaster } from './port/broadcaster'
+import { HeartbeatManager } from './port/heartbeat'
+import { MessageHandler } from './port/message-handler'
+import { PortRegistry } from './port/registry'
+import type { PortManagerOptions } from './types'
 
 /**
  * Manages MessagePort connections in a SharedWorker
@@ -7,29 +11,45 @@ import type { PortManagerOptions, ClientState } from './types'
  * @template TMessage - The type of application messages (non-internal messages)
  */
 export class PortManager<TMessage = unknown> extends Logger {
-  private clients: Map<MessagePort, ClientState> = new Map()
-  private pingInterval: number
-  private pingTimeout: number
+  private registry: PortRegistry<MessagePort>
+  private broadcaster: Broadcaster<MessagePort>
+  private messageHandler: MessageHandler<MessagePort, TMessage>
+  private heartbeat: HeartbeatManager<MessagePort>
   private onActiveCountChange?: (
     activeCount: number,
     totalCount: number
   ) => void
   private onMessage?: (port: MessagePort, message: TMessage) => void
-  private pingIntervalId: ReturnType<typeof setInterval>
 
   constructor(options: PortManagerOptions<TMessage> = {}) {
     super()
-    this.pingInterval = options.pingInterval ?? 10_000
-    this.pingTimeout = options.pingTimeout ?? 5000
     this.onActiveCountChange = options.onActiveCountChange
     this.onMessage = options.onMessage
     this.onLog = options.onLog
 
-    // Start ping interval
-    this.pingIntervalId = setInterval(
-      () => this.checkClients(),
-      this.pingInterval
+    // Initialize modules
+    this.registry = new PortRegistry()
+    this.broadcaster = new Broadcaster()
+    this.messageHandler = new MessageHandler({
+      onVisibilityChange: (port, visible) =>
+        this.handleVisibilityChange(port, visible),
+      onDisconnect: (port) => this.handleDisconnect(port),
+      onPong: (port) => this.handlePong(port),
+      onAppMessage: (port, message) => this.onMessage?.(port, message),
+    })
+    this.heartbeat = new HeartbeatManager(
+      {
+        pingInterval: options.pingInterval ?? 10_000,
+        pingTimeout: options.pingTimeout ?? 5000,
+      },
+      {
+        onStalePort: (port) => this.removeStalePort(port),
+        onPing: (port) => this.sendPing(port),
+      }
     )
+
+    // Setup heartbeat interval
+    this.heartbeat.onInterval(() => this.checkClients())
 
     this.log('PortManager initialized', 'info')
   }
@@ -39,13 +59,13 @@ export class PortManager<TMessage = unknown> extends Logger {
    */
   handleConnect(port: MessagePort): void {
     const controller = new AbortController()
-    this.clients.set(port, {
+    this.registry.register(port, {
       visible: true,
       lastPong: Date.now(),
       controller,
     })
     this.log('New client connected', 'info', {
-      totalClients: this.clients.size,
+      totalClients: this.registry.getTotal(),
     })
 
     this.updateClientCount()
@@ -65,101 +85,80 @@ export class PortManager<TMessage = unknown> extends Logger {
    * Broadcast a message to all connected clients
    */
   broadcast(message: unknown): void {
-    for (const [port] of this.clients) {
-      port.postMessage(message)
-    }
+    this.broadcaster.broadcast(this.registry.getPorts(), message)
   }
 
   /**
    * Get the number of active (visible) clients
    */
   getActiveCount(): number {
-    let count = 0
-    for (const client of this.clients.values()) {
-      if (client.visible) count++
-    }
-    return count
+    return this.registry.getActiveCount()
   }
 
   /**
    * Get the total number of connected clients
    */
   getTotalCount(): number {
-    return this.clients.size
+    return this.registry.getTotal()
   }
 
   private handleMessage(port: MessagePort, data: unknown): void {
-    let client = this.clients.get(port)
+    let client = this.registry.get(port)
 
     // Re-add client if it was removed (e.g., after computer sleep)
     if (!client) {
       this.log('Reconnecting previously removed client', 'info')
       const controller = new AbortController()
       client = { visible: true, lastPong: Date.now(), controller }
-      this.clients.set(port, client)
+      this.registry.register(port, client)
       this.updateClientCount()
     }
 
-    // Type guard for internal messages
-    const message = data as { type?: string; visible?: boolean }
+    // Delegate to message handler
+    this.messageHandler.handle(port, data)
+  }
 
-    switch (message.type) {
-      case '@shared-worker-utils/visibility-change': {
-        client.visible = message.visible ?? true
-        this.log('Client visibility changed', 'info', {
-          visible: message.visible,
-        })
-        this.updateClientCount()
+  private handleVisibilityChange(port: MessagePort, visible: boolean): void {
+    this.registry.update(port, { visible })
+    this.log('Client visibility changed', 'info', { visible })
+    this.updateClientCount()
+  }
 
-        break
-      }
-      case '@shared-worker-utils/disconnect': {
-        const disconnectingClient = this.clients.get(port)
-        disconnectingClient?.controller.abort()
-        this.clients.delete(port)
-        this.log('Client disconnected', 'info', {
-          remainingClients: this.clients.size,
-        })
-        this.updateClientCount()
+  private handleDisconnect(port: MessagePort): void {
+    const client = this.registry.get(port)
+    client?.controller.abort()
+    this.registry.remove(port)
+    this.log('Client disconnected', 'info', {
+      remainingClients: this.registry.getTotal(),
+    })
+    this.updateClientCount()
+  }
 
-        break
-      }
-      case '@shared-worker-utils/pong': {
-        client.lastPong = Date.now()
-        this.log('Received pong from client', 'debug')
+  private handlePong(port: MessagePort): void {
+    this.registry.update(port, { lastPong: Date.now() })
+    this.log('Received pong from client', 'debug')
+  }
 
-        break
-      }
-      default: {
-        // Non-internal message - pass through to application
-        this.onMessage?.(port, data as TMessage)
-      }
-    }
+  private sendPing(port: MessagePort): void {
+    this.log('Sending ping to client', 'debug')
+    this.broadcaster.send(port, { type: '@shared-worker-utils/ping' })
+  }
+
+  private removeStalePort(port: MessagePort): void {
+    const client = this.registry.get(port)
+    client?.controller.abort()
+    this.registry.remove(port)
   }
 
   private checkClients(): void {
-    const now = Date.now()
-    let removedCount = 0
-    const staleThreshold = this.pingInterval + this.pingTimeout
-
-    for (const [port, client] of this.clients) {
-      // Remove port if it hasn't responded to the last ping
-      if (now - client.lastPong > staleThreshold) {
-        client.controller.abort()
-        this.clients.delete(port)
-        removedCount++
-      } else {
-        // Send ping
-        this.log('Sending ping to client', 'debug')
-        port.postMessage({ type: '@shared-worker-utils/ping' })
-      }
-    }
+    const entries = this.registry.getEntries()
+    const stalePorts = this.heartbeat.checkPorts(entries)
 
     // Update connection state if any ports were removed
-    if (removedCount > 0) {
+    if (stalePorts.length > 0) {
       this.log('Removed stale client(s)', 'info', {
-        removedCount,
-        remainingClients: this.clients.size,
+        removedCount: stalePorts.length,
+        remainingClients: this.registry.getTotal(),
       })
       this.updateClientCount()
     }
@@ -175,7 +174,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     })
 
     // Broadcast client count to all clients
-    this.broadcast({
+    this.broadcaster.broadcast(this.registry.getPorts(), {
       type: '@shared-worker-utils/client-count',
       total: totalCount,
       active: activeCount,
@@ -193,12 +192,12 @@ export class PortManager<TMessage = unknown> extends Logger {
    * Clean up resources (stop ping interval and abort all listeners)
    */
   destroy(): void {
-    clearInterval(this.pingIntervalId)
+    this.heartbeat.stop()
     // Abort all client controllers before clearing
-    for (const client of this.clients.values()) {
+    for (const [, client] of this.registry.getEntries()) {
       client.controller.abort()
     }
-    this.clients.clear()
+    this.registry.clear()
     this.log('PortManager destroyed', 'info')
   }
 }
