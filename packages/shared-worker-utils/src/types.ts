@@ -101,3 +101,47 @@ export type InternalMessage =
   | DisconnectMessage
   | PingMessage
   | PongMessage
+
+/**
+ * Entry in the port registry
+ */
+export interface PortEntry<TPort = MessagePort> {
+  id: string
+  port: TPort
+  meta?: Record<string, unknown>
+}
+
+/**
+ * Options for PortRegistry
+ */
+export interface PortRegistryOptions {
+  /**
+   * Callback for internal logging with structured log entries
+   */
+  onLog?: (logEntry: LogEntry) => void
+}
+
+/**
+ * Connection state
+ */
+export enum ConnectionState {
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  DISCONNECTED = 'disconnected',
+}
+
+/**
+ * Options for Connection
+ */
+export interface ConnectionOptions {
+  /**
+   * Callback for internal logging with structured log entries
+   */
+  onLog?: (logEntry: LogEntry) => void
+
+  /**
+   * Whether to automatically start the port
+   * @default true
+   */
+  autoStart?: boolean
+}

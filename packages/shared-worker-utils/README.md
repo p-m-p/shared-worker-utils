@@ -281,7 +281,9 @@ const portManager = new PortManager({
     const contextStr = logEntry.context
       ? ` ${JSON.stringify(logEntry.context)}`
       : ''
-    console.log(`[${logEntry.level.toUpperCase()}] ${logEntry.message}${contextStr}`)
+    console.log(
+      `[${logEntry.level.toUpperCase()}] ${logEntry.message}${contextStr}`
+    )
   },
 })
 ```

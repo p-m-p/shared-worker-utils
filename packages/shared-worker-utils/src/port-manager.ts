@@ -1,4 +1,6 @@
 import { Logger } from './logger'
+import { PortRegistry } from './port/registry'
+import { MESSAGE_TYPES, normalizeMessage } from './port/utilities'
 import type { PortManagerOptions, ClientState } from './types'
 
 /**
@@ -8,6 +10,7 @@ import type { PortManagerOptions, ClientState } from './types'
  */
 export class PortManager<TMessage = unknown> extends Logger {
   private clients: Map<MessagePort, ClientState> = new Map()
+  private registry: PortRegistry<MessagePort>
   private pingInterval: number
   private pingTimeout: number
   private onActiveCountChange?: (
@@ -24,6 +27,9 @@ export class PortManager<TMessage = unknown> extends Logger {
     this.onActiveCountChange = options.onActiveCountChange
     this.onMessage = options.onMessage
     this.onLog = options.onLog
+
+    // Initialize registry
+    this.registry = new PortRegistry<MessagePort>({ onLog: options.onLog })
 
     // Start ping interval
     this.pingIntervalId = setInterval(
@@ -101,10 +107,10 @@ export class PortManager<TMessage = unknown> extends Logger {
     }
 
     // Type guard for internal messages
-    const message = data as { type?: string; visible?: boolean }
+    const message = normalizeMessage(data)
 
     switch (message.type) {
-      case '@shared-worker-utils/visibility-change': {
+      case MESSAGE_TYPES.VISIBILITY_CHANGE: {
         client.visible = message.visible ?? true
         this.log('Client visibility changed', 'info', {
           visible: message.visible,
@@ -113,7 +119,7 @@ export class PortManager<TMessage = unknown> extends Logger {
 
         break
       }
-      case '@shared-worker-utils/disconnect': {
+      case MESSAGE_TYPES.DISCONNECT: {
         const disconnectingClient = this.clients.get(port)
         disconnectingClient?.controller.abort()
         this.clients.delete(port)
@@ -124,7 +130,7 @@ export class PortManager<TMessage = unknown> extends Logger {
 
         break
       }
-      case '@shared-worker-utils/pong': {
+      case MESSAGE_TYPES.PONG: {
         client.lastPong = Date.now()
         this.log('Received pong from client', 'debug')
 
@@ -151,7 +157,7 @@ export class PortManager<TMessage = unknown> extends Logger {
       } else {
         // Send ping
         this.log('Sending ping to client', 'debug')
-        port.postMessage({ type: '@shared-worker-utils/ping' })
+        port.postMessage({ type: MESSAGE_TYPES.PING })
       }
     }
 
@@ -176,7 +182,7 @@ export class PortManager<TMessage = unknown> extends Logger {
 
     // Broadcast client count to all clients
     this.broadcast({
-      type: '@shared-worker-utils/client-count',
+      type: MESSAGE_TYPES.CLIENT_COUNT,
       total: totalCount,
       active: activeCount,
     })
