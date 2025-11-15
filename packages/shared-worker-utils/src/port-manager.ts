@@ -1,4 +1,6 @@
 import { Logger } from './logger'
+import { PortRegistry } from './port/registry'
+import { MessageType } from './port/utilities'
 import type { PortManagerOptions, ClientState } from './types'
 
 /**
@@ -8,6 +10,7 @@ import type { PortManagerOptions, ClientState } from './types'
  */
 export class PortManager<TMessage = unknown> extends Logger {
   private clients: Map<MessagePort, ClientState> = new Map()
+  private registry: PortRegistry<MessagePort>
   private pingInterval: number
   private pingTimeout: number
   private onActiveCountChange?: (
@@ -25,6 +28,9 @@ export class PortManager<TMessage = unknown> extends Logger {
     this.onMessage = options.onMessage
     this.onLog = options.onLog
 
+    // Initialize registry with same logger
+    this.registry = new PortRegistry<MessagePort>({ onLog: options.onLog })
+
     // Start ping interval
     this.pingIntervalId = setInterval(
       () => this.checkClients(),
@@ -39,11 +45,17 @@ export class PortManager<TMessage = unknown> extends Logger {
    */
   handleConnect(port: MessagePort): void {
     const controller = new AbortController()
-    this.clients.set(port, {
+    const clientState: ClientState = {
       visible: true,
       lastPong: Date.now(),
       controller,
-    })
+    }
+    this.clients.set(port, clientState)
+
+    // Register in the registry for tracking
+    const portId = this.getPortId(port)
+    this.registry.register(portId, port, clientState)
+
     this.log('New client connected', 'info', {
       totalClients: this.clients.size,
     })
@@ -97,6 +109,11 @@ export class PortManager<TMessage = unknown> extends Logger {
       const controller = new AbortController()
       client = { visible: true, lastPong: Date.now(), controller }
       this.clients.set(port, client)
+
+      // Re-register in registry
+      const portId = this.getPortId(port)
+      this.registry.register(portId, port, client)
+
       this.updateClientCount()
     }
 
@@ -104,7 +121,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     const message = data as { type?: string; visible?: boolean }
 
     switch (message.type) {
-      case '@shared-worker-utils/visibility-change': {
+      case MessageType.VISIBILITY_CHANGE: {
         client.visible = message.visible ?? true
         this.log('Client visibility changed', 'info', {
           visible: message.visible,
@@ -113,10 +130,15 @@ export class PortManager<TMessage = unknown> extends Logger {
 
         break
       }
-      case '@shared-worker-utils/disconnect': {
+      case MessageType.DISCONNECT: {
         const disconnectingClient = this.clients.get(port)
         disconnectingClient?.controller.abort()
         this.clients.delete(port)
+
+        // Remove from registry
+        const portId = this.getPortId(port)
+        this.registry.remove(portId)
+
         this.log('Client disconnected', 'info', {
           remainingClients: this.clients.size,
         })
@@ -124,7 +146,7 @@ export class PortManager<TMessage = unknown> extends Logger {
 
         break
       }
-      case '@shared-worker-utils/pong': {
+      case MessageType.PONG: {
         client.lastPong = Date.now()
         this.log('Received pong from client', 'debug')
 
@@ -147,11 +169,16 @@ export class PortManager<TMessage = unknown> extends Logger {
       if (now - client.lastPong > staleThreshold) {
         client.controller.abort()
         this.clients.delete(port)
+
+        // Remove from registry
+        const portId = this.getPortId(port)
+        this.registry.remove(portId)
+
         removedCount++
       } else {
         // Send ping
         this.log('Sending ping to client', 'debug')
-        port.postMessage({ type: '@shared-worker-utils/ping' })
+        port.postMessage({ type: MessageType.PING })
       }
     }
 
@@ -176,13 +203,22 @@ export class PortManager<TMessage = unknown> extends Logger {
 
     // Broadcast client count to all clients
     this.broadcast({
-      type: '@shared-worker-utils/client-count',
+      type: MessageType.CLIENT_COUNT,
       total: totalCount,
       active: activeCount,
     })
 
     // Notify callback
     this.onActiveCountChange?.(activeCount, totalCount)
+  }
+
+  /**
+   * Get a unique ID for a port (using a WeakMap would be ideal but we use object identity)
+   */
+  private getPortId(port: MessagePort): string {
+    // Use the port object's memory address representation
+    // This is a simple approach; in production you might want a more robust ID scheme
+    return `port-${[...this.clients.keys()].indexOf(port)}`
   }
 
   protected getLogPrefix(): string {
@@ -199,6 +235,8 @@ export class PortManager<TMessage = unknown> extends Logger {
       client.controller.abort()
     }
     this.clients.clear()
+    // Shutdown the registry
+    this.registry.shutdown()
     this.log('PortManager destroyed', 'info')
   }
 }
