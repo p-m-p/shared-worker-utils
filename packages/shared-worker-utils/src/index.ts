@@ -7,6 +7,7 @@ export {
   isInternalMessage,
   normalizeMessage,
 } from './port/utilities'
+export { ConnectionState } from './types'
 export type {
   PortManagerOptions,
   SharedWorkerClientOptions,
@@ -22,5 +23,4 @@ export type {
   PortEntry,
   PortRegistryOptions,
   ConnectionOptions,
-  ConnectionState,
 } from './types'
