@@ -10,6 +10,7 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
   private port: MessagePort
   private onMessage: (message: TMessage) => void
   private isTabVisible: boolean
+  private abortController = new AbortController()
 
   constructor(
     worker: SharedWorker,
@@ -45,6 +46,16 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
    */
   disconnect(): void {
     this.send({ type: '@shared-worker-utils/disconnect' })
+    this.destroy()
+  }
+
+  /**
+   * Clean up event listeners and close the port
+   */
+  destroy(): void {
+    this.abortController.abort()
+    this.port.close()
+    this.log('SharedWorkerClient destroyed', 'info')
   }
 
   /**
@@ -75,7 +86,9 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
   }
 
   private setupMessageHandler(): void {
-    this.port.addEventListener('message', this.handleMessage)
+    this.port.addEventListener('message', this.handleMessage, {
+      signal: this.abortController.signal,
+    })
   }
 
   private isInternalMessage(type: string): boolean {
@@ -100,13 +113,19 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
   }
 
   private setupVisibilityHandler(): void {
-    document.addEventListener('visibilitychange', this.handleVisibilityChange)
+    document.addEventListener('visibilitychange', this.handleVisibilityChange, {
+      signal: this.abortController.signal,
+    })
   }
 
   private setupUnloadHandler(): void {
-    window.addEventListener('beforeunload', () => {
-      this.disconnect()
-    })
+    window.addEventListener(
+      'beforeunload',
+      () => {
+        this.disconnect()
+      },
+      { signal: this.abortController.signal }
+    )
   }
 
   protected getLogPrefix(): string {

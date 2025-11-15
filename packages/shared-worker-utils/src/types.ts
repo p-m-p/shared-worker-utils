@@ -69,6 +69,7 @@ export interface SharedWorkerClientOptions<TMessage = unknown> {
 export interface ClientState {
   visible: boolean
   lastPong: number
+  controller: AbortController
 }
 
 export interface ClientCountMessage {

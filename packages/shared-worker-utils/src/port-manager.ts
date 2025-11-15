@@ -38,16 +38,25 @@ export class PortManager<TMessage = unknown> extends Logger {
    * Handle a new port connection
    */
   handleConnect(port: MessagePort): void {
-    this.clients.set(port, { visible: true, lastPong: Date.now() })
+    const controller = new AbortController()
+    this.clients.set(port, {
+      visible: true,
+      lastPong: Date.now(),
+      controller,
+    })
     this.log('New client connected', 'info', {
       totalClients: this.clients.size,
     })
 
     this.updateClientCount()
 
-    port.addEventListener('message', (event) => {
-      this.handleMessage(port, event.data)
-    })
+    port.addEventListener(
+      'message',
+      (event) => {
+        this.handleMessage(port, event.data)
+      },
+      { signal: controller.signal }
+    )
 
     port.start()
   }
@@ -85,7 +94,8 @@ export class PortManager<TMessage = unknown> extends Logger {
     // Re-add client if it was removed (e.g., after computer sleep)
     if (!client) {
       this.log('Reconnecting previously removed client', 'info')
-      client = { visible: true, lastPong: Date.now() }
+      const controller = new AbortController()
+      client = { visible: true, lastPong: Date.now(), controller }
       this.clients.set(port, client)
       this.updateClientCount()
     }
@@ -104,6 +114,8 @@ export class PortManager<TMessage = unknown> extends Logger {
         break
       }
       case '@shared-worker-utils/disconnect': {
+        const disconnectingClient = this.clients.get(port)
+        disconnectingClient?.controller.abort()
         this.clients.delete(port)
         this.log('Client disconnected', 'info', {
           remainingClients: this.clients.size,
@@ -133,6 +145,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     for (const [port, client] of this.clients) {
       // Remove port if it hasn't responded to the last ping
       if (now - client.lastPong > staleThreshold) {
+        client.controller.abort()
         this.clients.delete(port)
         removedCount++
       } else {
@@ -177,10 +190,14 @@ export class PortManager<TMessage = unknown> extends Logger {
   }
 
   /**
-   * Clean up resources (stop ping interval)
+   * Clean up resources (stop ping interval and abort all listeners)
    */
   destroy(): void {
     clearInterval(this.pingIntervalId)
+    // Abort all client controllers before clearing
+    for (const client of this.clients.values()) {
+      client.controller.abort()
+    }
     this.clients.clear()
     this.log('PortManager destroyed', 'info')
   }

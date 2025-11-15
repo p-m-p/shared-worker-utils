@@ -24,6 +24,10 @@ class MockPort {
     // No-op for mock
   }
 
+  close() {
+    // No-op for mock
+  }
+
   // Test helper to get last sent message
   getLastMessage() {
     return this.messages.at(-1)
