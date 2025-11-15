@@ -101,3 +101,44 @@ export type InternalMessage =
   | DisconnectMessage
   | PingMessage
   | PongMessage
+
+/**
+ * Entry in the port registry
+ */
+export interface PortEntry<TPort = MessagePort, TMeta = unknown> {
+  id: string
+  port: TPort
+  meta?: TMeta
+}
+
+/**
+ * Options for PortRegistry
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface PortRegistryOptions {
+  // Placeholder for future options
+}
+
+/**
+ * Connection state enum
+ */
+export enum ConnectionState {
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  CLOSED = 'closed',
+}
+
+/**
+ * Options for Connection
+ */
+export interface ConnectionOptions {
+  /**
+   * Callback for internal logging with structured log entries
+   */
+  onLog?: (logEntry: LogEntry) => void
+  /**
+   * Auto-start the connection
+   * @default true
+   */
+  autoStart?: boolean
+}

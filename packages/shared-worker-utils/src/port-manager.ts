@@ -1,4 +1,6 @@
 import { Logger } from './logger'
+import { Connection } from './port/connection'
+import { MESSAGE_TYPES } from './port/utilities'
 import type { PortManagerOptions, ClientState } from './types'
 
 /**
@@ -8,6 +10,7 @@ import type { PortManagerOptions, ClientState } from './types'
  */
 export class PortManager<TMessage = unknown> extends Logger {
   private clients: Map<MessagePort, ClientState> = new Map()
+  private connections: Map<MessagePort, Connection> = new Map()
   private pingInterval: number
   private pingTimeout: number
   private onActiveCountChange?: (
@@ -48,8 +51,21 @@ export class PortManager<TMessage = unknown> extends Logger {
       totalClients: this.clients.size,
     })
 
+    // Create a Connection wrapper for the port
+    const connection = new Connection(port, undefined, {
+      onLog: this.onLog,
+      autoStart: false,
+    })
+
+    connection.onMessage((data) => {
+      this.handleMessage(port, data)
+    })
+
+    this.connections.set(port, connection)
+
     this.updateClientCount()
 
+    // Use the original approach with abort controller for backward compatibility
     port.addEventListener(
       'message',
       (event) => {
@@ -104,7 +120,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     const message = data as { type?: string; visible?: boolean }
 
     switch (message.type) {
-      case '@shared-worker-utils/visibility-change': {
+      case MESSAGE_TYPES.VISIBILITY_CHANGE: {
         client.visible = message.visible ?? true
         this.log('Client visibility changed', 'info', {
           visible: message.visible,
@@ -113,10 +129,14 @@ export class PortManager<TMessage = unknown> extends Logger {
 
         break
       }
-      case '@shared-worker-utils/disconnect': {
+      case MESSAGE_TYPES.DISCONNECT: {
         const disconnectingClient = this.clients.get(port)
         disconnectingClient?.controller.abort()
         this.clients.delete(port)
+        // Clean up connection wrapper
+        const connection = this.connections.get(port)
+        connection?.close()
+        this.connections.delete(port)
         this.log('Client disconnected', 'info', {
           remainingClients: this.clients.size,
         })
@@ -124,7 +144,7 @@ export class PortManager<TMessage = unknown> extends Logger {
 
         break
       }
-      case '@shared-worker-utils/pong': {
+      case MESSAGE_TYPES.PONG: {
         client.lastPong = Date.now()
         this.log('Received pong from client', 'debug')
 
@@ -147,11 +167,15 @@ export class PortManager<TMessage = unknown> extends Logger {
       if (now - client.lastPong > staleThreshold) {
         client.controller.abort()
         this.clients.delete(port)
+        // Clean up connection wrapper
+        const connection = this.connections.get(port)
+        connection?.close()
+        this.connections.delete(port)
         removedCount++
       } else {
         // Send ping
         this.log('Sending ping to client', 'debug')
-        port.postMessage({ type: '@shared-worker-utils/ping' })
+        port.postMessage({ type: MESSAGE_TYPES.PING })
       }
     }
 
@@ -176,7 +200,7 @@ export class PortManager<TMessage = unknown> extends Logger {
 
     // Broadcast client count to all clients
     this.broadcast({
-      type: '@shared-worker-utils/client-count',
+      type: MESSAGE_TYPES.CLIENT_COUNT,
       total: totalCount,
       active: activeCount,
     })
@@ -198,7 +222,12 @@ export class PortManager<TMessage = unknown> extends Logger {
     for (const client of this.clients.values()) {
       client.controller.abort()
     }
+    // Close all connection wrappers
+    for (const connection of this.connections.values()) {
+      connection.close()
+    }
     this.clients.clear()
+    this.connections.clear()
     this.log('PortManager destroyed', 'info')
   }
 }
