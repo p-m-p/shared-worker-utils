@@ -119,14 +119,11 @@ export class PortManager<TMessage = unknown> extends Logger {
   }
 
   private handleMessage(port: MessagePort, data: unknown): void {
-    let client = this.clients.get(port)
-
-    // Re-add client if it was removed (shouldn't happen in normal flow)
+    const client = this.clients.get(port)
     if (!client) {
-      this.log('Reconnecting previously removed client', 'info')
-      this.addClient(port)
-      client = this.clients.get(port)!
-      this.updateClientCount()
+      // This should never happen - removed clients have their listeners aborted
+      this.log('Received message from unknown client', 'error')
+      return
     }
 
     // Restore stale clients to connected status when they send ANY message
