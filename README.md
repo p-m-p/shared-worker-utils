@@ -14,10 +14,11 @@ A lightweight TypeScript library for managing SharedWorker port connections with
 
 ## Features
 
-- 🔄 **Automatic Heartbeat** - Ping/pong mechanism to detect and remove stale clients
+- 🔄 **Automatic Heartbeat** - Ping/pong mechanism to detect stale clients
+- 🗑️ **Stale Client Management** - Track stale clients with optional auto-removal or manual cleanup
 - 👁️ **Visibility Tracking** - Automatically tracks which tabs are visible/hidden
 - 🎯 **Type-Safe** - Full TypeScript support with generic message types
-- 🔌 **Automatic Reconnection** - Gracefully handles disconnections and reconnects clients
+- 🔌 **Automatic Reconnection** - Gracefully restores stale clients when they send messages
 - 📦 **Tiny** - Under 5 kB (less than 2 kB gzipped)
 
 ## Installation
@@ -133,11 +134,13 @@ client.send({ type: 'request', id: '123' })
 
 Manages MessagePort connections on the SharedWorker side with:
 
-- Automatic ping/pong heartbeat to detect disconnected clients
+- Automatic ping/pong heartbeat to detect stale clients
+- Stale client tracking with optional auto-removal timeout
+- Manual stale client cleanup methods
 - Visibility state tracking for all connected tabs
-- Client count management (total and active)
-- Message broadcasting to all clients
-- Automatic reconnection of disconnected clients
+- Client count management (total, active, and stale)
+- Message broadcasting to connected clients only
+- Automatic reconnection when stale clients send messages
 
 ### SharedWorkerClient
 
@@ -179,6 +182,7 @@ Then open http://localhost:5173 in multiple tabs!
 
 - `pingInterval?: number` - Interval between ping messages (default: 10000ms)
 - `pingTimeout?: number` - Max time to wait for pong response (default: 5000ms)
+- `staleClientTimeout?: number` - Auto-remove stale clients after this duration (default: undefined - no auto-removal)
 - `onActiveCountChange?: (activeCount: number, totalCount: number) => void` - Callback when client counts change
 - `onMessage?: (port: MessagePort, message: TMessage) => void` - Callback for messages from clients
 - `onLog?: (logEntry: LogEntry) => void` - Callback for internal logging with structured log entries
@@ -188,9 +192,11 @@ Then open http://localhost:5173 in multiple tabs!
 **Methods:**
 
 - `handleConnect(port: MessagePort): void` - Handle a new port connection
-- `broadcast(message: unknown): void` - Broadcast a message to all clients
-- `getActiveCount(): number` - Get count of visible clients
-- `getTotalCount(): number` - Get count of all connected clients
+- `broadcast(message: unknown): void` - Broadcast a message to all connected clients (excludes stale)
+- `getActiveCount(): number` - Get count of active (visible and connected) clients
+- `getTotalCount(): number` - Get count of connected clients (excludes stale)
+- `getStaleClientCount(): number` - Get count of stale clients
+- `removeStaleClients(): number` - Manually remove all stale clients and return count removed
 - `destroy(): void` - Clean up resources
 
 ### SharedWorkerClient<TMessage>

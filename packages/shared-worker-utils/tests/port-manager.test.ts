@@ -10,10 +10,22 @@ interface TestMessage {
 // Mock MessagePort
 class MockMessagePort {
   private listeners = new Map<string, (event: MessageEvent) => void>()
+  private signals = new Map<string, AbortSignal>()
   lastMessage?: unknown
 
-  addEventListener(type: string, listener: (event: MessageEvent) => void) {
+  addEventListener(
+    type: string,
+    listener: (event: MessageEvent) => void,
+    options?: { signal?: AbortSignal }
+  ) {
     this.listeners.set(type, listener)
+    if (options?.signal) {
+      this.signals.set(type, options.signal)
+      options.signal.addEventListener('abort', () => {
+        this.listeners.delete(type)
+        this.signals.delete(type)
+      })
+    }
   }
 
   postMessage(data: unknown) {
@@ -22,6 +34,10 @@ class MockMessagePort {
   }
 
   start() {
+    // No-op for mock
+  }
+
+  close() {
     // No-op for mock
   }
 
@@ -185,10 +201,11 @@ describe('PortManager', () => {
     // Client should still exist but not be counted as connected
     expect(portManager.getTotalCount()).toBe(0)
     expect(portManager.getActiveCount()).toBe(0)
+    expect(portManager.getStaleClientCount()).toBe(1)
     expect(onLog).toHaveBeenCalledWith({
-      message: '[PortManager] Marked client(s) as stale',
+      message: '[PortManager] Client status update',
       level: 'info',
-      context: { staleCount: 1, connectedClients: 0 },
+      context: { markedStale: 1, removed: 0, connectedClients: 0 },
     })
   })
 
@@ -348,6 +365,178 @@ describe('PortManager', () => {
     mockPort.simulateMessage(customMessage)
 
     expect(onMessage).toHaveBeenCalledWith(mockPort, customMessage)
+  })
+
+  it('should auto-remove stale clients after staleClientTimeout', () => {
+    const onLog = vi.fn()
+    const pingInterval = 5000
+    const pingTimeout = 2000
+    const staleClientTimeout = 10_000
+
+    portManager = new PortManager({
+      pingInterval,
+      pingTimeout,
+      staleClientTimeout,
+      onLog,
+    })
+
+    mockPort = new MockMessagePort() as unknown as MessagePort
+    portManager.handleConnect(mockPort as unknown as MessagePort)
+
+    // Advance to first ping, then past timeout to mark as stale
+    vi.advanceTimersByTime(pingInterval)
+    vi.advanceTimersByTime(pingTimeout + pingInterval)
+
+    // Client should be marked as stale
+    expect(portManager.getTotalCount()).toBe(0)
+    expect(portManager.getStaleClientCount()).toBe(1)
+
+    // Advance time past the staleClientTimeout
+    vi.advanceTimersByTime(staleClientTimeout + pingInterval)
+
+    // Client should now be auto-removed
+    expect(portManager.getStaleClientCount()).toBe(0)
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[PortManager] Auto-removed stale client',
+      level: 'info',
+      context: expect.objectContaining({ timeStale: expect.any(Number) }),
+    })
+  })
+
+  it('should not auto-remove stale clients when staleClientTimeout is not set', () => {
+    const pingInterval = 5000
+    const pingTimeout = 2000
+
+    portManager = new PortManager({ pingInterval, pingTimeout })
+
+    mockPort = new MockMessagePort() as unknown as MessagePort
+    portManager.handleConnect(mockPort as unknown as MessagePort)
+
+    // Advance to make client stale
+    vi.advanceTimersByTime(pingInterval)
+    vi.advanceTimersByTime(pingTimeout + pingInterval)
+
+    // Client should be stale
+    expect(portManager.getStaleClientCount()).toBe(1)
+
+    // Advance time significantly
+    vi.advanceTimersByTime(100_000)
+
+    // Client should still be stale (not removed)
+    expect(portManager.getStaleClientCount()).toBe(1)
+  })
+
+  it('should manually remove all stale clients with removeStaleClients()', () => {
+    const onLog = vi.fn()
+    const pingInterval = 5000
+    const pingTimeout = 2000
+
+    portManager = new PortManager({ pingInterval, pingTimeout, onLog })
+
+    const port1 = new MockMessagePort() as unknown as MessagePort
+    const port2 = new MockMessagePort() as unknown as MessagePort
+    const port3 = new MockMessagePort() as unknown as MessagePort
+
+    portManager.handleConnect(port1)
+    portManager.handleConnect(port2)
+    portManager.handleConnect(port3)
+
+    // Make port1 and port2 stale by not responding
+    vi.advanceTimersByTime(pingInterval)
+
+    // Only port3 responds
+    ;(port3 as unknown as MockMessagePort).simulateMessage({
+      type: '@shared-worker-utils/pong',
+    })
+
+    vi.advanceTimersByTime(pingTimeout + pingInterval)
+
+    // Two clients should be stale, one connected
+    expect(portManager.getStaleClientCount()).toBe(2)
+    expect(portManager.getTotalCount()).toBe(1)
+
+    // Manually remove stale clients
+    const removedCount = portManager.removeStaleClients()
+
+    // Should return count of removed clients
+    expect(removedCount).toBe(2)
+    expect(portManager.getStaleClientCount()).toBe(0)
+    expect(portManager.getTotalCount()).toBe(1)
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[PortManager] Manually removed stale clients',
+      level: 'info',
+      context: { removedCount: 2 },
+    })
+  })
+
+  it('should return 0 from removeStaleClients() when no stale clients exist', () => {
+    portManager = new PortManager()
+
+    const port1 = new MockMessagePort() as unknown as MessagePort
+    portManager.handleConnect(port1)
+
+    // All clients are connected
+    const removedCount = portManager.removeStaleClients()
+
+    expect(removedCount).toBe(0)
+    expect(portManager.getTotalCount()).toBe(1)
+  })
+
+  it('should clear staleTimestamp when stale client reconnects', () => {
+    const onLog = vi.fn()
+    const pingInterval = 5000
+    const pingTimeout = 2000
+    const staleClientTimeout = 10_000
+
+    portManager = new PortManager({
+      pingInterval,
+      pingTimeout,
+      staleClientTimeout,
+      onLog,
+    })
+
+    mockPort = new MockMessagePort() as unknown as MessagePort
+    portManager.handleConnect(mockPort as unknown as MessagePort)
+
+    // Make client stale
+    vi.advanceTimersByTime(pingInterval)
+    vi.advanceTimersByTime(pingTimeout + pingInterval)
+
+    expect(portManager.getStaleClientCount()).toBe(1)
+
+    // Client reconnects by sending a message - this should clear staleTimestamp
+    mockPort.simulateMessage({ type: 'custom', data: 'reconnect' })
+
+    // Verify the restoration log
+    expect(onLog).toHaveBeenCalledWith({
+      message: '[PortManager] Restoring stale client to connected status',
+      level: 'info',
+    })
+
+    // Client should be connected again
+    expect(portManager.getStaleClientCount()).toBe(0)
+    expect(portManager.getTotalCount()).toBe(1)
+
+    // Advance just a short time and verify client is still connected
+    // (not immediately removed on next check)
+    vi.advanceTimersByTime(pingInterval)
+
+    // Client should receive a ping and should still be connected
+    expect(portManager.getTotalCount()).toBe(1)
+
+    // Respond to the ping
+    mockPort.simulateMessage({ type: '@shared-worker-utils/pong' })
+
+    // Advance well past the original staleClientTimeout
+    // Keep responding to pings to verify staleTimestamp was truly cleared
+    for (let index = 0; index < 3; index++) {
+      vi.advanceTimersByTime(pingInterval)
+      mockPort.simulateMessage({ type: '@shared-worker-utils/pong' })
+    }
+
+    // Client should still be connected (staleTimestamp was cleared on reconnect)
+    expect(portManager.getTotalCount()).toBe(1)
+    expect(portManager.getStaleClientCount()).toBe(0)
   })
 
   it('should clean up on destroy', () => {

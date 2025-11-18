@@ -6,14 +6,18 @@ Utilities for managing SharedWorker port connections with ping/pong heartbeat an
 
 - **PortManager**: Manages MessagePort connections in a SharedWorker
   - Automatic ping/pong heartbeat to detect stale connections
+  - Stale client tracking with optional auto-removal timeout
+  - Manual stale client cleanup methods
   - Visibility state tracking for all connected clients
-  - Automatic reconnection of disconnected clients
-  - Message broadcasting to all clients
+  - Automatic reconnection when stale clients send messages
+  - Message broadcasting to connected clients only
+  - Structured logging support
 
 - **SharedWorkerClient**: Wraps a SharedWorker connection on the client side
   - Automatic visibility change detection
   - Automatic ping/pong responses
   - Clean disconnect on page unload
+  - Structured logging support
 
 ## Installation
 
@@ -89,6 +93,7 @@ type ClientMessage =
 const portManager = new PortManager<ClientMessage>({
   pingInterval: 10000, // Send ping every 10 seconds
   pingTimeout: 5000, // Expect pong within 5 seconds of ping
+  staleClientTimeout: 60000, // Auto-remove stale clients after 1 minute (optional)
   onActiveCountChange: (activeCount, totalCount) => {
     console.log(`Active clients: ${activeCount}/${totalCount}`)
     // Manage your resources based on active clients
@@ -124,12 +129,19 @@ onconnect = (event) => {
   port.postMessage({ type: 'welcome', data: 'Hello!' })
 }
 
-// Broadcast to all clients
+// Broadcast to all connected clients (excludes stale clients)
 portManager.broadcast({ type: 'update', data: someData })
 
 // Get client counts
-const totalClients = portManager.getTotalCount()
-const activeClients = portManager.getActiveCount()
+const totalClients = portManager.getTotalCount() // Connected clients only
+const activeClients = portManager.getActiveCount() // Connected + visible clients
+const staleClients = portManager.getStaleClientCount() // Stale clients
+
+// Manually remove stale clients (useful if not using staleClientTimeout)
+if (staleClients > 5) {
+  const removed = portManager.removeStaleClients()
+  console.log(`Removed ${removed} stale clients`)
+}
 ```
 
 ### Client Side
@@ -192,6 +204,9 @@ interface PortManagerOptions<TMessage = unknown> {
   /** Maximum time to wait for pong response after ping in milliseconds (default: 5000) */
   pingTimeout?: number
 
+  /** Auto-remove stale clients after this many milliseconds (default: undefined - no auto-removal) */
+  staleClientTimeout?: number
+
   /** Callback when active or total client count changes */
   onActiveCountChange?: (activeCount: number, totalCount: number) => void
 
@@ -218,10 +233,12 @@ interface LogEntry {
 #### Methods
 
 - `handleConnect(port: MessagePort): void` - Handle a new port connection
-- `broadcast(message: unknown): void` - Broadcast a message to all connected clients
-- `getActiveCount(): number` - Get the number of active (visible) clients
-- `getTotalCount(): number` - Get the total number of connected clients
-- `destroy(): void` - Clean up resources (stop ping interval)
+- `broadcast(message: unknown): void` - Broadcast a message to all connected clients (excludes stale clients)
+- `getActiveCount(): number` - Get the number of active (visible and connected) clients
+- `getTotalCount(): number` - Get the total number of connected clients (excludes stale clients)
+- `getStaleClientCount(): number` - Get the number of stale clients
+- `removeStaleClients(): number` - Manually remove all stale clients and return the count of removed clients
+- `destroy(): void` - Clean up resources (stop ping interval and remove all clients)
 
 ### SharedWorkerClient
 
@@ -314,15 +331,72 @@ const portManager = new PortManager({
 
 ### Ping/Pong Heartbeat
 
-The PortManager sends ping messages at the specified `pingInterval`. Each client must respond with a pong within `pingTimeout` milliseconds. If a client fails to respond, it's considered stale and removed.
+The PortManager sends ping messages at the specified `pingInterval`. Each client must respond with a pong within `pingTimeout` milliseconds. If a client fails to respond, it's marked as stale.
 
-The staleness check is: `now - lastPong > pingInterval + pingTimeout`
+The staleness check is: `now - lastSeen > pingInterval + pingTimeout`
 
 For example, with `pingInterval: 10000` and `pingTimeout: 5000`:
 
 - Ping sent every 10 seconds
 - Client must respond within 5 seconds
-- Client removed if no pong for 15 seconds total
+- Client marked as stale if no response for 15 seconds total
+
+### Stale Client Management
+
+When a client is marked as stale, it's not immediately removed. Instead:
+
+1. **Status Tracking**: The client's status changes from `'connected'` to `'stale'`
+2. **Excluded from Operations**: Stale clients are excluded from:
+   - `getTotalCount()` - only counts connected clients
+   - `getActiveCount()` - only counts connected, visible clients
+   - `broadcast()` - messages only sent to connected clients
+3. **Automatic Reconnection**: If a stale client sends ANY message (including pong), it's automatically restored to `'connected'` status
+4. **Optional Auto-Removal**: If `staleClientTimeout` is set, stale clients are automatically removed after the timeout period
+5. **Manual Cleanup**: Use `removeStaleClients()` to manually remove all stale clients at any time
+
+#### Example with Auto-Removal
+
+```typescript
+const portManager = new PortManager({
+  pingInterval: 10_000, // 10 seconds
+  pingTimeout: 5000, // 5 seconds
+  staleClientTimeout: 60_000, // 1 minute
+})
+
+// Timeline for an unresponsive client:
+// t=0s: Client connects
+// t=10s: Ping sent
+// t=15s: No pong received, client marked as stale
+// t=75s: 60 seconds after becoming stale, client is auto-removed
+```
+
+#### Example with Manual Cleanup
+
+```typescript
+const portManager = new PortManager({
+  pingInterval: 10_000,
+  pingTimeout: 5000,
+  // No staleClientTimeout - stale clients persist until manually removed
+})
+
+// Check for stale clients
+if (portManager.getStaleClientCount() > 0) {
+  console.log(`Found ${portManager.getStaleClientCount()} stale clients`)
+
+  // Manually remove them
+  const removed = portManager.removeStaleClients()
+  console.log(`Removed ${removed} stale clients`)
+}
+```
+
+#### Why Track Instead of Remove?
+
+This approach provides several benefits:
+
+1. **Reconnection Support**: Clients that temporarily lose connection (e.g., laptop sleep, network blip) can automatically reconnect
+2. **Flexible Cleanup**: Choose between automatic timeout-based removal or manual cleanup based on your needs
+3. **Visibility**: Track stale clients separately to monitor connection health
+4. **No False Positives**: Clients aren't immediately removed due to temporary network issues
 
 ### Visibility Tracking
 
@@ -334,12 +408,13 @@ SharedWorkerClient uses the Page Visibility API to track when tabs are hidden/vi
 
 ### Automatic Reconnection
 
-If a client is disconnected:
+If a client temporarily loses connection (e.g., laptop sleep, network interruption):
 
-1. PortManager's ping/pong mechanism will timeout and remove stale clients
-2. When the client reconnects and sends messages, PortManager detects the missing client
-3. The client is automatically re-added to the connection pool
-4. Everything resumes normally
+1. PortManager's ping/pong mechanism will mark the client as stale after `pingInterval + pingTimeout`
+2. The client remains in memory but is excluded from broadcasts and counts
+3. When the client reconnects and sends ANY message (including pong), it's automatically restored to connected status
+4. The stale timestamp is cleared, preventing auto-removal
+5. Everything resumes normally without creating a new connection
 
 ## Example
 

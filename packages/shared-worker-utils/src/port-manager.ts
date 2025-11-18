@@ -11,6 +11,7 @@ export class PortManager<TMessage = unknown> extends Logger {
   private clients: Map<MessagePort, ClientState> = new Map()
   private pingInterval: number
   private pingTimeout: number
+  private staleClientTimeout?: number
   private onActiveCountChange?: (
     activeCount: number,
     totalCount: number
@@ -22,6 +23,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     super()
     this.pingInterval = options.pingInterval ?? 10_000
     this.pingTimeout = options.pingTimeout ?? 5000
+    this.staleClientTimeout = options.staleClientTimeout
     this.onActiveCountChange = options.onActiveCountChange
     this.onMessage = options.onMessage
     this.onLog = options.onLog
@@ -148,6 +150,17 @@ export class PortManager<TMessage = unknown> extends Logger {
     return count
   }
 
+  /**
+   * Get the number of stale clients
+   */
+  getStaleClientCount(): number {
+    let count = 0
+    for (const client of this.clients.values()) {
+      if (client.status === 'stale') count++
+    }
+    return count
+  }
+
   private handleMessage(port: MessagePort, data: unknown): void {
     const client = this.clients.get(port)
     if (!client) {
@@ -160,6 +173,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     if (client.status === 'stale') {
       this.log('Restoring stale client to connected status', 'info')
       client.status = 'connected'
+      client.staleTimestamp = undefined
       this.updateLastSeen(client)
       this.updateClientCount()
     }
@@ -199,6 +213,7 @@ export class PortManager<TMessage = unknown> extends Logger {
   private checkClients(): void {
     const now = Date.now()
     let staleCount = 0
+    let removedCount = 0
     const staleThreshold = this.pingInterval + this.pingTimeout
 
     for (const [port, client] of this.clients) {
@@ -206,17 +221,33 @@ export class PortManager<TMessage = unknown> extends Logger {
 
       if (isStale && this.isConnected(client)) {
         client.status = 'stale'
+        client.staleTimestamp = now
         staleCount++
         this.log('Marking client as stale', 'info')
       } else if (!isStale && this.isConnected(client)) {
         this.log('Sending ping to client', 'debug')
         port.postMessage({ type: MESSAGE_TYPES.PING })
       }
+
+      // Auto-remove if timeout exceeded
+      if (
+        client.status === 'stale' &&
+        client.staleTimestamp &&
+        this.staleClientTimeout
+      ) {
+        const timeStale = now - client.staleTimestamp
+        if (timeStale > this.staleClientTimeout) {
+          this.removeClient(port)
+          removedCount++
+          this.log('Auto-removed stale client', 'info', { timeStale })
+        }
+      }
     }
 
-    if (staleCount > 0) {
-      this.log('Marked client(s) as stale', 'info', {
-        staleCount,
+    if (staleCount > 0 || removedCount > 0) {
+      this.log('Client status update', 'info', {
+        markedStale: staleCount,
+        removed: removedCount,
         connectedClients: this.getTotalCount(),
       })
       this.updateClientCount()
@@ -242,6 +273,30 @@ export class PortManager<TMessage = unknown> extends Logger {
 
   protected getLogPrefix(): string {
     return '[PortManager]'
+  }
+
+  /**
+   * Manually remove all stale clients
+   * @returns Number of clients removed
+   */
+  removeStaleClients(): number {
+    let removedCount = 0
+    const ports = [...this.clients.keys()]
+
+    for (const port of ports) {
+      const client = this.clients.get(port)
+      if (client?.status === 'stale') {
+        this.removeClient(port)
+        removedCount++
+      }
+    }
+
+    if (removedCount > 0) {
+      this.log('Manually removed stale clients', 'info', { removedCount })
+      this.updateClientCount()
+    }
+
+    return removedCount
   }
 
   /**

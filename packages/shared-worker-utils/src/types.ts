@@ -37,6 +37,12 @@ export interface PortManagerOptions<TMessage = unknown> {
   pingTimeout?: number
 
   /**
+   * Auto-remove stale clients after this many milliseconds
+   * @default undefined (no auto-removal)
+   */
+  staleClientTimeout?: number
+
+  /**
    * Callback when active or total client count changes
    */
   onActiveCountChange?: (activeCount: number, totalCount: number) => void
@@ -73,6 +79,7 @@ export interface ClientState {
   lastSeen: number
   controller: AbortController
   status: ClientStatus
+  staleTimestamp?: number
 }
 
 export interface ClientCountMessage {
