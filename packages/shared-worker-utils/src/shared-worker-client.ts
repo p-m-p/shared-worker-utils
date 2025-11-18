@@ -1,15 +1,6 @@
+import { MESSAGE_TYPES, INTERNAL_MESSAGE_PREFIX } from './constants'
 import { Logger } from './logger'
 import type { SharedWorkerClientOptions } from './types'
-
-// Internal message type constants
-const MESSAGE_TYPES = {
-  PING: '@shared-worker-utils/ping',
-  PONG: '@shared-worker-utils/pong',
-  DISCONNECT: '@shared-worker-utils/disconnect',
-  VISIBILITY_CHANGE: '@shared-worker-utils/visibility-change',
-} as const
-
-const INTERNAL_MESSAGE_PREFIX = '@shared-worker-utils/'
 
 /**
  * Client-side SharedWorker connection manager

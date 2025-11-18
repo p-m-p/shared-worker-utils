@@ -1,3 +1,4 @@
+import { MESSAGE_TYPES } from './constants'
 import { Logger } from './logger'
 import type { PortManagerOptions, ClientState } from './types'
 
@@ -167,7 +168,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     const message = data as { type?: string; visible?: boolean }
 
     switch (message.type) {
-      case '@shared-worker-utils/visibility-change': {
+      case MESSAGE_TYPES.VISIBILITY_CHANGE: {
         client.visible = message.visible ?? true
         this.log('Client visibility changed', 'info', {
           visible: message.visible,
@@ -176,13 +177,13 @@ export class PortManager<TMessage = unknown> extends Logger {
 
         break
       }
-      case '@shared-worker-utils/disconnect': {
+      case MESSAGE_TYPES.DISCONNECT: {
         this.removeClient(port)
         this.updateClientCount()
 
         break
       }
-      case '@shared-worker-utils/pong': {
+      case MESSAGE_TYPES.PONG: {
         this.updateLastSeen(client)
         this.log('Received pong from client', 'debug')
 
@@ -209,7 +210,7 @@ export class PortManager<TMessage = unknown> extends Logger {
         this.log('Marking client as stale', 'info')
       } else if (!isStale && this.isConnected(client)) {
         this.log('Sending ping to client', 'debug')
-        port.postMessage({ type: '@shared-worker-utils/ping' })
+        port.postMessage({ type: MESSAGE_TYPES.PING })
       }
     }
 
@@ -231,7 +232,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     })
 
     this.broadcast({
-      type: '@shared-worker-utils/client-count',
+      type: MESSAGE_TYPES.CLIENT_COUNT,
       total,
       active,
     })
