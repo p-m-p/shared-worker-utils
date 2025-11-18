@@ -70,7 +70,7 @@ export type ClientStatus = 'connected' | 'stale'
 
 export interface ClientState {
   visible: boolean
-  lastPong: number
+  lastSeen: number
   controller: AbortController
   status: ClientStatus
 }

@@ -51,7 +51,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     const controller = new AbortController()
     this.clients.set(port, {
       visible: true,
-      lastPong: Date.now(),
+      lastSeen: Date.now(),
       controller,
       status: 'connected',
     })
@@ -67,6 +67,35 @@ export class PortManager<TMessage = unknown> extends Logger {
     this.log('Client added', 'info', {
       totalClients: this.clients.size,
     })
+  }
+
+  /**
+   * Update client's last seen timestamp
+   */
+  private updateLastSeen(client: ClientState): void {
+    client.lastSeen = Date.now()
+  }
+
+  /**
+   * Check if a client is connected (not stale)
+   */
+  private isConnected(client: ClientState): boolean {
+    return client.status === 'connected'
+  }
+
+  /**
+   * Get both active and total client counts in a single iteration
+   */
+  private getClientCounts(): { active: number; total: number } {
+    let active = 0
+    let total = 0
+    for (const client of this.clients.values()) {
+      if (this.isConnected(client)) {
+        total++
+        if (client.visible) active++
+      }
+    }
+    return { active, total }
   }
 
   /**
@@ -90,7 +119,7 @@ export class PortManager<TMessage = unknown> extends Logger {
    */
   broadcast(message: unknown): void {
     for (const [port, client] of this.clients) {
-      if (client.status === 'connected') {
+      if (this.isConnected(client)) {
         port.postMessage(message)
       }
     }
@@ -102,7 +131,7 @@ export class PortManager<TMessage = unknown> extends Logger {
   getActiveCount(): number {
     let count = 0
     for (const client of this.clients.values()) {
-      if (client.visible && client.status === 'connected') count++
+      if (this.isConnected(client) && client.visible) count++
     }
     return count
   }
@@ -113,7 +142,7 @@ export class PortManager<TMessage = unknown> extends Logger {
   getTotalCount(): number {
     let count = 0
     for (const client of this.clients.values()) {
-      if (client.status === 'connected') count++
+      if (this.isConnected(client)) count++
     }
     return count
   }
@@ -130,7 +159,7 @@ export class PortManager<TMessage = unknown> extends Logger {
     if (client.status === 'stale') {
       this.log('Restoring stale client to connected status', 'info')
       client.status = 'connected'
-      client.lastPong = Date.now() // Reset lastPong to prevent immediate re-staling
+      this.updateLastSeen(client)
       this.updateClientCount()
     }
 
@@ -154,7 +183,7 @@ export class PortManager<TMessage = unknown> extends Logger {
         break
       }
       case '@shared-worker-utils/pong': {
-        client.lastPong = Date.now()
+        this.updateLastSeen(client)
         this.log('Received pong from client', 'debug')
 
         break
@@ -172,22 +201,18 @@ export class PortManager<TMessage = unknown> extends Logger {
     const staleThreshold = this.pingInterval + this.pingTimeout
 
     for (const [port, client] of this.clients) {
-      // Mark client as stale if it hasn't responded to the last ping
-      if (now - client.lastPong > staleThreshold) {
-        if (client.status === 'connected') {
-          client.status = 'stale'
-          staleCount++
-          this.log('Marking client as stale', 'info')
-        }
-        // Don't send pings to stale clients
-      } else if (client.status === 'connected') {
-        // Only send pings to connected clients
+      const isStale = now - client.lastSeen > staleThreshold
+
+      if (isStale && this.isConnected(client)) {
+        client.status = 'stale'
+        staleCount++
+        this.log('Marking client as stale', 'info')
+      } else if (!isStale && this.isConnected(client)) {
         this.log('Sending ping to client', 'debug')
         port.postMessage({ type: '@shared-worker-utils/ping' })
       }
     }
 
-    // Update connection state if any clients became stale
     if (staleCount > 0) {
       this.log('Marked client(s) as stale', 'info', {
         staleCount,
@@ -198,23 +223,20 @@ export class PortManager<TMessage = unknown> extends Logger {
   }
 
   private updateClientCount(): void {
-    const activeCount = this.getActiveCount()
-    const totalCount = this.getTotalCount()
+    const { active, total } = this.getClientCounts()
 
     this.log('Active clients updated', 'debug', {
-      activeCount,
-      totalCount,
+      activeCount: active,
+      totalCount: total,
     })
 
-    // Broadcast client count to all clients
     this.broadcast({
       type: '@shared-worker-utils/client-count',
-      total: totalCount,
-      active: activeCount,
+      total,
+      active,
     })
 
-    // Notify callback
-    this.onActiveCountChange?.(activeCount, totalCount)
+    this.onActiveCountChange?.(active, total)
   }
 
   protected getLogPrefix(): string {
