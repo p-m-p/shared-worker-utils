@@ -245,7 +245,12 @@ describe('PortManager', () => {
     const onMessage = vi.fn()
     const pingInterval = 5000
     const pingTimeout = 2000
-    portManager = new PortManager({ pingInterval, pingTimeout, onLog, onMessage })
+    portManager = new PortManager({
+      pingInterval,
+      pingTimeout,
+      onLog,
+      onMessage,
+    })
 
     mockPort = new MockMessagePort() as unknown as MessagePort
     portManager.handleConnect(mockPort as unknown as MessagePort)
@@ -310,7 +315,9 @@ describe('PortManager', () => {
 
     // Only port2 should receive the message
     expect((port1 as unknown as MockMessagePort).lastMessage).toBeUndefined()
-    expect((port2 as unknown as MockMessagePort).lastMessage).toEqual(testMessage)
+    expect((port2 as unknown as MockMessagePort).lastMessage).toEqual(
+      testMessage
+    )
   })
 
   it('should call onActiveCountChange callback', () => {
