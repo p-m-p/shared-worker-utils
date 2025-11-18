@@ -10,11 +10,6 @@ export const MESSAGE_TYPES = {
 } as const
 
 /**
- * Prefix for all internal messages
- */
-export const INTERNAL_MESSAGE_PREFIX = '@shared-worker-utils/'
-
-/**
  * Type for message type values
  */
 export type MessageType = (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES]

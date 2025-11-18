@@ -1,4 +1,4 @@
-import { MESSAGE_TYPES, INTERNAL_MESSAGE_PREFIX } from './constants'
+import { MESSAGE_TYPES } from './constants'
 import { Logger } from './logger'
 import type { SharedWorkerClientOptions } from './types'
 
@@ -91,7 +91,10 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
     }
 
     // Filter out other internal messages
-    if (message.type?.startsWith(INTERNAL_MESSAGE_PREFIX)) {
+    if (
+      message.type &&
+      Object.values(MESSAGE_TYPES).includes(message.type as string)
+    ) {
       return
     }
 
