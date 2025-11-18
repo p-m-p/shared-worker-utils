@@ -66,10 +66,13 @@ export interface SharedWorkerClientOptions<TMessage = unknown> {
   onLog?: (logEntry: LogEntry) => void
 }
 
+export type ClientStatus = 'connected' | 'stale'
+
 export interface ClientState {
   visible: boolean
   lastPong: number
   controller: AbortController
+  status: ClientStatus
 }
 
 export interface ClientCountMessage {
