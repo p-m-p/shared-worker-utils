@@ -1,6 +1,16 @@
 import { Logger } from './logger'
 import type { SharedWorkerClientOptions } from './types'
 
+// Internal message type constants
+const MESSAGE_TYPES = {
+  PING: '@shared-worker-utils/ping',
+  PONG: '@shared-worker-utils/pong',
+  DISCONNECT: '@shared-worker-utils/disconnect',
+  VISIBILITY_CHANGE: '@shared-worker-utils/visibility-change',
+} as const
+
+const INTERNAL_MESSAGE_PREFIX = '@shared-worker-utils/'
+
 /**
  * Client-side SharedWorker connection manager
  * Handles visibility tracking, ping/pong responses, and cleanup
@@ -20,7 +30,7 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
     this.port = worker.port
     this.onMessage = options.onMessage
     this.onLog = options.onLog
-    this.isTabVisible = !document.hidden
+    this.isTabVisible = this.getDocumentVisibility()
 
     this.setupMessageHandler()
     this.setupVisibilityHandler()
@@ -35,6 +45,20 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
   }
 
   /**
+   * Get current document visibility state
+   */
+  private getDocumentVisibility(): boolean {
+    return !document.hidden
+  }
+
+  /**
+   * Send an internal message to the SharedWorker
+   */
+  private sendInternal(type: string, data?: Record<string, unknown>): void {
+    this.send({ type, ...data })
+  }
+
+  /**
    * Send a message to the SharedWorker
    */
   send(message: unknown): void {
@@ -45,7 +69,7 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
    * Disconnect from the SharedWorker
    */
   disconnect(): void {
-    this.send({ type: '@shared-worker-utils/disconnect' })
+    this.sendInternal(MESSAGE_TYPES.DISCONNECT)
     this.destroy()
   }
 
@@ -66,23 +90,22 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
   }
 
   private handleMessage = (event: MessageEvent): void => {
-    const data: unknown = event.data
-    const message = data as { type?: string }
+    const message = event.data as { type?: string }
 
     // Handle internal ping messages
-    if (message.type === '@shared-worker-utils/ping') {
+    if (message.type === MESSAGE_TYPES.PING) {
       this.log('Received ping from SharedWorker, sending pong', 'debug')
-      this.send({ type: '@shared-worker-utils/pong' })
+      this.sendInternal(MESSAGE_TYPES.PONG)
       return
     }
 
     // Filter out other internal messages
-    if (message.type && this.isInternalMessage(message.type)) {
+    if (message.type?.startsWith(INTERNAL_MESSAGE_PREFIX)) {
       return
     }
 
     // Pass non-internal messages to the consumer
-    this.onMessage(data as TMessage)
+    this.onMessage(event.data as TMessage)
   }
 
   private setupMessageHandler(): void {
@@ -91,22 +114,16 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
     })
   }
 
-  private isInternalMessage(type: string): boolean {
-    return type.startsWith('@shared-worker-utils/')
-  }
-
   private handleVisibilityChange = (): void => {
-    const wasVisible = this.isTabVisible
-    this.isTabVisible = !document.hidden
+    const newVisibility = this.getDocumentVisibility()
 
-    if (wasVisible !== this.isTabVisible) {
+    if (newVisibility !== this.isTabVisible) {
+      this.isTabVisible = newVisibility
       this.log('Tab visibility changed', 'info', {
         visible: this.isTabVisible,
       })
 
-      // Notify SharedWorker of visibility change
-      this.send({
-        type: '@shared-worker-utils/visibility-change',
+      this.sendInternal(MESSAGE_TYPES.VISIBILITY_CHANGE, {
         visible: this.isTabVisible,
       })
     }
