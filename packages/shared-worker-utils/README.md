@@ -93,7 +93,7 @@ type ClientMessage =
 const portManager = new PortManager<ClientMessage>({
   pingInterval: 10000, // Send ping every 10 seconds
   pingTimeout: 5000, // Expect pong within 5 seconds of ping
-  staleClientTimeout: 60000, // Auto-remove stale clients after 1 minute (optional)
+  // staleClientTimeout: 60000, // Optional: Auto-remove stale clients after 1 minute
   onActiveCountChange: (activeCount, totalCount) => {
     console.log(`Active clients: ${activeCount}/${totalCount}`)
     // Manage your resources based on active clients
