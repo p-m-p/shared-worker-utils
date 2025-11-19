@@ -93,7 +93,9 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
     // Filter out other internal messages
     if (
       message.type &&
-      Object.values(MESSAGE_TYPES).includes(message.type as string)
+      Object.values(MESSAGE_TYPES).includes(
+        message.type as (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES]
+      )
     ) {
       return
     }
