@@ -104,8 +104,13 @@ const portWrapper = new SharedWorkerClient<WorkerMessage>(worker, {
       }
     }
   },
-  onLog: (message, ...parameters) => {
-    console.log(message, ...parameters)
+  onLog: (logEntry) => {
+    const contextStr = logEntry.context
+      ? ` ${JSON.stringify(logEntry.context)}`
+      : ''
+    console.log(
+      `[${logEntry.level.toUpperCase()}] ${logEntry.message}${contextStr}`
+    )
   },
 })
 
