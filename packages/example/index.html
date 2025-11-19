@@ -18,12 +18,16 @@
             >
           </div>
           <div class="status-item">
-            <span class="label">Tabs:</span>
+            <span class="label">Connected Tabs:</span>
             <span id="tab-count">0</span>
           </div>
           <div class="status-item">
             <span class="label">Active Tabs:</span>
             <span id="active-tab-count">0</span>
+          </div>
+          <div class="status-item">
+            <span class="label">Stale Tabs:</span>
+            <span id="stale-tab-count">0</span>
           </div>
           <div class="status-item">
             <span class="label">Tab State:</span>
@@ -44,6 +48,12 @@
             <strong>Try it:</strong> Switch between tabs or minimize the window
             - the table updates pause when the tab is not visible to save
             resources.
+          </p>
+          <p>
+            <strong>Client Status:</strong> Connected tabs respond to pings.
+            If a tab doesn't respond (e.g., laptop sleep, network issue), it becomes "stale"
+            but stays in memory for auto-reconnection. Stale tabs are excluded from broadcasts
+            and the connected count.
           </p>
         </div>
 

@@ -47,6 +47,7 @@ const portManager = new PortManager<AppMessage>({
       type: 'client-info',
       total: totalCount,
       active: activeCount,
+      stale: portManager.getStaleClientCount(),
     })
   },
   onMessage: (_port, message) => {

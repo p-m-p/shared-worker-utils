@@ -5,6 +5,7 @@ import { SharedWorkerClient } from 'shared-worker-utils'
 const connectionStatus = document.querySelector('#connection-status')!
 const tabCount = document.querySelector('#tab-count')!
 const activeTabCount = document.querySelector('#active-tab-count')!
+const staleTabCount = document.querySelector('#stale-tab-count')!
 const tabVisibility = document.querySelector('#tab-visibility')!
 const stockTbody = document.querySelector('#stock-tbody')!
 
@@ -21,7 +22,7 @@ interface StockData {
 type WorkerMessage =
   | { type: 'connection-status'; status: string }
   | { type: 'stock-update'; data: StockData[] }
-  | { type: 'client-info'; total: number; active: number }
+  | { type: 'client-info'; total: number; active: number; stale: number }
 
 let currentStockData: StockData[] = []
 
@@ -33,9 +34,10 @@ function updateConnectionStatus(status: string) {
 }
 
 // Update client count UI
-function updateClientCounts(total: number, active: number) {
+function updateClientCounts(total: number, active: number, stale: number) {
   tabCount.textContent = total.toString()
   activeTabCount.textContent = active.toString()
+  staleTabCount.textContent = stale.toString()
 }
 
 // Format timestamp
@@ -96,7 +98,7 @@ const portWrapper = new SharedWorkerClient<WorkerMessage>(worker, {
 
       case 'client-info': {
         // Application-level client count message (not the internal client-count)
-        updateClientCounts(message.total, message.active)
+        updateClientCounts(message.total, message.active, message.stale)
         updateVisibilityUI()
         break
       }
