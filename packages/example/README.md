@@ -2,6 +2,13 @@
 
 A demonstration of using `shared-worker-utils` to manage a single WebSocket connection shared across multiple browser tabs, featuring real-time stock price updates.
 
+## 🚀 Live Demo
+
+- **Frontend**: Deployed on GitHub Pages
+- **Backend**: Deployed on Cloudflare Workers
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment instructions.
+
 ## What This Demo Shows
 
 - **Single WebSocket Connection**: One WebSocket connection shared across all browser tabs via SharedWorker
@@ -15,7 +22,9 @@ A demonstration of using `shared-worker-utils` to manage a single WebSocket conn
 - **Heartbeat Mechanism**: Automatic connection health monitoring with ping/pong
 - **Stale Client Detection**: Removes disconnected clients automatically
 
-## Running the Demo
+## Running the Demo Locally
+
+### Option 1: Node.js WebSocket Server (Original)
 
 ### 1. Install Dependencies
 
@@ -39,6 +48,30 @@ In a separate terminal:
 
 ```bash
 pnpm dev
+```
+
+### Option 2: Cloudflare Worker (Local Development)
+
+### 1. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 2. Start the Cloudflare Worker Locally
+
+```bash
+cd packages/example
+pnpm worker:dev
+```
+
+### 3. Start the Vite Dev Server
+
+In a separate terminal:
+
+```bash
+cd packages/example
+VITE_WS_URL=ws://localhost:8787 pnpm dev
 ```
 
 ### 4. Open in Browser
@@ -82,13 +115,22 @@ Open the application in your browser (typically `http://localhost:5173`)
 
 ## Architecture
 
-### Server (`server.js`)
+### Server Options
+
+#### Node.js Server (`server.js`)
 
 - WebSocket server using the `ws` library
 - Broadcasts mock stock price data every second
 - Implements heartbeat/ping-pong mechanism (30-second interval)
 - Tracks and logs connected clients
 - Broadcasts to 8 stock symbols: AAPL, GOOGL, MSFT, AMZN, TSLA, META, NVDA, AMD
+
+#### Cloudflare Worker (`worker/index.ts`)
+
+- Cloudflare Durable Objects for WebSocket connections
+- Same broadcasting logic as Node.js server
+- Automatically scales with Cloudflare infrastructure
+- Supports deployment to Cloudflare Workers platform
 
 ### SharedWorker (`src/shared-worker.ts`)
 
