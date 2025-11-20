@@ -39,7 +39,7 @@ jobs:
       - name: Build
         env:
           VITE_BASE_PATH: /shared-worker-utils/
-          VITE_WS_URL: wss://shared-worker-example.YOUR_SUBDOMAIN.workers.dev
+          VITE_WS_URL: wss://shared-worker-example.phil-m-parsons.workers.dev
         run: pnpm run build
 
       - name: Setup Pages
