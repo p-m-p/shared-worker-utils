@@ -1,5 +1,14 @@
 # shared-worker-utils
 
+## 2.2.1
+
+### Patch Changes
+
+- e8bb446: Fix TypeScript linting errors and update dependencies
+  - Fix TypeScript type casting in shared-worker-client.ts for better type safety
+  - Update vite to version 7.2.2
+  - Improve code formatting and documentation comments
+
 ## 2.2.0
 
 ### Minor Changes
