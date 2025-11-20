@@ -112,6 +112,22 @@ VITE_WS_URL=ws://localhost:8787 pnpm dev
 - Check that `CLOUDFLARE_ACCOUNT_ID` is correct
 - Review the deployment logs in GitHub Actions
 
+## Security Considerations
+
+### API Tokens
+
+- **Never commit** `CLOUDFLARE_API_TOKEN` or other secrets to your repository
+- Always use GitHub Secrets for sensitive credentials
+- Regularly rotate API tokens for better security
+- Use the minimum required permissions for API tokens
+
+### CORS Configuration
+
+The Cloudflare Worker includes CORS headers (`Access-Control-Allow-Origin: *`) to allow connections from any origin. For production deployments, consider:
+- Restricting CORS to your specific GitHub Pages domain
+- Implementing authentication if needed
+- Adding rate limiting to prevent abuse
+
 ## Architecture
 
 ### Frontend (GitHub Pages)
