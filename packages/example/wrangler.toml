@@ -1,0 +1,13 @@
+name = "shared-worker-example"
+main = "worker/index.ts"
+compatibility_date = "2024-11-20"
+
+# Durable Objects bindings
+[[durable_objects.bindings]]
+name = "STOCK_WEBSOCKET"
+class_name = "StockWebSocket"
+
+# Migration to specify the Durable Object class
+[[migrations]]
+tag = "v1"
+new_classes = ["StockWebSocket"]

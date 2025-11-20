@@ -47,6 +47,13 @@ export default defineConfig(
       ],
     },
   },
+  // Allow null in worker files (Cloudflare Workers API uses null)
+  {
+    files: ['**/worker/**/*.ts'],
+    rules: {
+      'unicorn/no-null': 'off',
+    },
+  },
   // Prettier must be last to override other configs
   prettier
 )
