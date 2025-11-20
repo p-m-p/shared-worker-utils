@@ -10,4 +10,4 @@ class_name = "StockWebSocket"
 # Migration to specify the Durable Object class
 [[migrations]]
 tag = "v1"
-new_classes = ["StockWebSocket"]
+new_sqlite_classes = ["StockWebSocket"]
