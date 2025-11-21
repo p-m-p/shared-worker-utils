@@ -44,16 +44,10 @@ importers:
       shared-worker-utils:
         specifier: workspace:*
         version: link:../shared-worker-utils
-      ws:
-        specifier: ^8.18.0
-        version: 8.18.3
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20251120.0
         version: 4.20251121.0
-      '@types/ws':
-        specifier: ^8.5.13
-        version: 8.18.1
       wrangler:
         specifier: ^4.49.1
         version: 4.50.0(@cloudflare/workers-types@4.20251121.0)
@@ -969,9 +963,6 @@ packages:
 
   '@types/node@24.10.1':
     resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
-
-  '@types/ws@8.18.1':
-    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@typescript-eslint/eslint-plugin@8.47.0':
     resolution: {integrity: sha512-fe0rz9WJQ5t2iaLfdbDc9T80GJy0AeO453q8C3YCilnGozvOyCG5t+EZtg7j7D88+c3FipfP/x+wzGnh1xp8ZA==}
@@ -3627,10 +3618,6 @@ snapshots:
   '@types/node@24.10.1':
     dependencies:
       undici-types: 7.16.0
-
-  '@types/ws@8.18.1':
-    dependencies:
-      '@types/node': 24.10.1
 
   '@typescript-eslint/eslint-plugin@8.47.0(@typescript-eslint/parser@8.47.0(eslint@9.39.1)(typescript@5.9.3))(eslint@9.39.1)(typescript@5.9.3)':
     dependencies:
