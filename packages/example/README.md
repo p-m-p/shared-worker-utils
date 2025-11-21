@@ -24,35 +24,9 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for deployment instructions.
 
 ## Running the Demo Locally
 
-### Option 1: Node.js WebSocket Server (Original)
-
 ### 1. Install Dependencies
 
 From the workspace root:
-
-```bash
-pnpm install
-```
-
-### 2. Start the WebSocket Server
-
-```bash
-pnpm server
-```
-
-The server will start on `ws://localhost:8080` and begin broadcasting stock prices.
-
-### 3. Start the Vite Dev Server
-
-In a separate terminal:
-
-```bash
-pnpm dev
-```
-
-### Option 2: Cloudflare Worker (Local Development)
-
-### 1. Install Dependencies
 
 ```bash
 pnpm install
@@ -65,13 +39,15 @@ cd packages/example
 pnpm worker:dev
 ```
 
+The worker will start on `ws://localhost:8787`.
+
 ### 3. Start the Vite Dev Server
 
 In a separate terminal:
 
 ```bash
 cd packages/example
-VITE_WS_URL=ws://localhost:8787 pnpm dev
+pnpm dev
 ```
 
 ### 4. Open in Browser
@@ -84,7 +60,7 @@ Open the application in your browser (typically `http://localhost:5173`)
 
 1. Open the app in multiple tabs
 2. Check browser DevTools console in each tab
-3. Check the server terminal - only ONE client connection should be logged
+3. Check the worker terminal - only ONE client connection should be logged
 4. Close tabs one by one - connection persists until the last tab is closed
 
 **Test Visibility Optimization:**
@@ -99,36 +75,29 @@ Open the application in your browser (typically `http://localhost:5173`)
 **Test Connection Pausing:**
 
 1. Open the app in multiple tabs
-2. Check server console - ONE WebSocket connection is active
+2. Check worker console - ONE WebSocket connection is active
 3. Hide/background ALL tabs (switch to a different application)
-4. Server console shows the connection is closed
+4. Worker console shows the connection is closed
 5. Switch back to any tab
-6. Server console shows a new connection is established
+6. Worker console shows a new connection is established
 7. All tabs resume receiving updates
 
 **Test Reconnection:**
 
-1. Stop the server (`Ctrl+C`)
+1. Stop the worker (`Ctrl+C`)
 2. Notice the connection status changes to "Disconnected"
-3. Restart the server
+3. Restart the worker
 4. The SharedWorker automatically reconnects within 3 seconds
 
 ## Architecture
 
-### Server Options
+### Cloudflare Worker (`worker/index.ts`)
 
-#### Node.js Server (`server.js`)
-
-- WebSocket server using the `ws` library
+- Cloudflare Durable Objects for WebSocket connections
 - Broadcasts mock stock price data every second
 - Implements heartbeat/ping-pong mechanism (30-second interval)
 - Tracks and logs connected clients
 - Broadcasts to 8 stock symbols: AAPL, GOOGL, MSFT, AMZN, TSLA, META, NVDA, AMD
-
-#### Cloudflare Worker (`worker/index.ts`)
-
-- Cloudflare Durable Objects for WebSocket connections
-- Same broadcasting logic as Node.js server
 - Automatically scales with Cloudflare infrastructure
 - Supports deployment to Cloudflare Workers platform
 
@@ -201,6 +170,7 @@ All clients receive the same messages simultaneously from the SharedWorker.
 - **Resource Optimization**: Pausing updates for hidden tabs and closing connections when no active clients
 - **Heartbeat Pattern**: Keeping connections alive with ping/pong
 - **Automatic Reconnection**: Handling disconnections and reconnecting clients
+- **Cloudflare Durable Objects**: Stateful WebSocket connections on the edge
 
 ## Browser Compatibility
 

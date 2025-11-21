@@ -160,8 +160,9 @@ Check out the [example application](./packages/example) showing real-time stock 
 git clone https://github.com/p-m-p/shared-worker-utils.git
 cd shared-worker-utils
 pnpm install
-pnpm server  # Terminal 1
-pnpm dev     # Terminal 2
+cd packages/example
+pnpm worker:dev  # Terminal 1
+pnpm dev         # Terminal 2
 ```
 
 Then open http://localhost:5173 in multiple tabs!
@@ -230,7 +231,6 @@ pnpm test        # Run tests
 pnpm build       # Build library and example
 pnpm lint        # Lint all packages
 pnpm dev         # Start example dev server
-pnpm server      # Start WebSocket server for example
 ```
 
 **Project Structure:**
@@ -243,7 +243,7 @@ packages/
 │   └── dist/            # Built output
 └── example/             # Demo application
     ├── src/             # Example source
-    └── server.js        # WebSocket server
+    └── worker/          # Cloudflare Worker
 ```
 
 ## Contributing

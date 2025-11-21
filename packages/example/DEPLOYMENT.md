@@ -70,16 +70,6 @@ You can also trigger deployments manually from GitHub Actions:
 
 ## Local Development
 
-### Running with Node.js WebSocket Server (Original)
-
-```bash
-# Terminal 1 - Start WebSocket server
-pnpm server
-
-# Terminal 2 - Start Vite dev server
-pnpm dev
-```
-
 ### Running with Cloudflare Worker Locally
 
 ```bash
@@ -87,10 +77,12 @@ pnpm dev
 cd packages/example
 pnpm worker:dev
 
-# Terminal 2 - Start Vite dev server with worker URL
+# Terminal 2 - Start Vite dev server
 cd packages/example
-VITE_WS_URL=ws://localhost:8787 pnpm dev
+pnpm dev
 ```
+
+The WebSocket will connect to `ws://localhost:8787` by default when running locally.
 
 ## Troubleshooting
 

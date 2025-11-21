@@ -8,8 +8,8 @@ declare const self: SharedWorkerGlobalScope
 type AppMessage = never // No application messages from clients in this example
 
 let socket: WebSocket | undefined
-// Use environment variable for WebSocket URL, default to localhost for development
-const WEBSOCKET_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080'
+// Use environment variable for WebSocket URL, default to wrangler dev server
+const WEBSOCKET_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8787'
 let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 const RECONNECT_DELAY = 3000
 
