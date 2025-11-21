@@ -7,18 +7,15 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "server": "node server.js",
     "worker:dev": "wrangler dev",
     "worker:deploy": "wrangler deploy",
     "worker:types": "tsc --noEmit -p tsconfig.worker.json"
   },
   "dependencies": {
-    "shared-worker-utils": "workspace:*",
-    "ws": "^8.18.0"
+    "shared-worker-utils": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251120.0",
-    "@types/ws": "^8.5.13",
     "wrangler": "^4.49.1"
   }
 }

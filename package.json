@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter example dev",
-    "server": "pnpm --filter example run server",
     "build": "pnpm -r --if-present build",
     "test": "pnpm -r --if-present test",
     "lint": "eslint .",
