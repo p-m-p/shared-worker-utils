@@ -52,7 +52,7 @@ function updateStockTable(stocks: StockData[]) {
   currentStockData = stocks
 
   // Don't update UI if tab is not visible
-  if (!portWrapper.isVisible()) {
+  if (!portWrapper.getIsVisible()) {
     return
   }
 
@@ -115,7 +115,7 @@ const portWrapper = new SharedWorkerClient<WorkerMessage>(worker, {
 
 // Update table when tab becomes visible
 document.addEventListener('visibilitychange', () => {
-  if (portWrapper.isVisible() && currentStockData.length > 0) {
+  if (portWrapper.getIsVisible() && currentStockData.length > 0) {
     updateStockTable(currentStockData)
   }
 })
