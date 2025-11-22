@@ -96,6 +96,27 @@ h1 {
   color: white;
 }
 
+.open-tab-btn {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.open-tab-btn:hover {
+  background: #2563eb;
+}
+
+.open-tab-btn:active {
+  background: #1d4ed8;
+}
+
 .info-box {
   margin-bottom: 1.5rem;
   padding: 1rem;

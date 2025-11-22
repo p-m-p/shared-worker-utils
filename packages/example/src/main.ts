@@ -6,8 +6,8 @@ const connectionStatus = document.querySelector('#connection-status')!
 const tabCount = document.querySelector('#tab-count')!
 const activeTabCount = document.querySelector('#active-tab-count')!
 const staleTabCount = document.querySelector('#stale-tab-count')!
-const tabVisibility = document.querySelector('#tab-visibility')!
 const stockTbody = document.querySelector('#stock-tbody')!
+const openTabButton = document.querySelector('#open-tab-btn')!
 
 // Store stock data
 interface StockData {
@@ -99,7 +99,6 @@ const portWrapper = new SharedWorkerClient<WorkerMessage>(worker, {
       case 'client-info': {
         // Application-level client count message (not the internal client-count)
         updateClientCounts(message.total, message.active, message.stale)
-        updateVisibilityUI()
         break
       }
     }
@@ -114,20 +113,14 @@ const portWrapper = new SharedWorkerClient<WorkerMessage>(worker, {
   },
 })
 
-// Update visibility UI based on wrapper's visibility
-const updateVisibilityUI = () => {
-  const isVisible = portWrapper.isVisible()
-  tabVisibility.textContent = isVisible ? 'Visible' : 'Hidden'
-  tabVisibility.className = `status ${isVisible ? 'visible' : 'hidden'}`
-
-  // If tab became visible and we have data, update the table
-  if (isVisible && currentStockData.length > 0) {
+// Update table when tab becomes visible
+document.addEventListener('visibilitychange', () => {
+  if (portWrapper.isVisible() && currentStockData.length > 0) {
     updateStockTable(currentStockData)
   }
-}
+})
 
-// Initialize visibility UI
-updateVisibilityUI()
-
-// Listen for visibility changes to update UI
-document.addEventListener('visibilitychange', updateVisibilityUI)
+// Open new tab button
+openTabButton.addEventListener('click', () => {
+  globalThis.open(globalThis.location.href, '_blank')
+})
