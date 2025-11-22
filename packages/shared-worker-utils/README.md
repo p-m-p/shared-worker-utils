@@ -135,7 +135,7 @@ portManager.broadcast({ type: 'update', data: someData })
 // Get client counts
 const totalClients = portManager.getTotalCount() // Connected clients only
 const activeClients = portManager.getActiveCount() // Connected + visible clients
-const staleClients = portManager.getStaleClientCount() // Stale clients
+const staleClients = portManager.getStaleCount() // Stale clients
 
 // Manually remove stale clients (useful if not using staleClientTimeout)
 if (staleClients > 5) {
@@ -236,7 +236,7 @@ interface LogEntry {
 - `broadcast(message: unknown): void` - Broadcast a message to all connected clients (excludes stale clients)
 - `getActiveCount(): number` - Get the number of active (visible and connected) clients
 - `getTotalCount(): number` - Get the total number of connected clients (excludes stale clients)
-- `getStaleClientCount(): number` - Get the number of stale clients
+- `getStaleCount(): number` - Get the number of stale clients
 - `removeStaleClients(): number` - Manually remove all stale clients and return the count of removed clients
 - `destroy(): void` - Clean up resources (stop ping interval and remove all clients)
 
@@ -380,8 +380,8 @@ const portManager = new PortManager({
 })
 
 // Check for stale clients
-if (portManager.getStaleClientCount() > 0) {
-  console.log(`Found ${portManager.getStaleClientCount()} stale clients`)
+if (portManager.getStaleCount() > 0) {
+  console.log(`Found ${portManager.getStaleCount()} stale clients`)
 
   // Manually remove them
   const removed = portManager.removeStaleClients()
