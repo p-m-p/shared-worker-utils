@@ -154,7 +154,9 @@ Wraps SharedWorker connections on the client side with:
 
 Check out the [example application](./packages/example) showing real-time stock prices shared across browser tabs via a single WebSocket connection.
 
-**Run the demo:**
+**[View the live demo →](https://philparsons.co.uk/shared-worker-utils/)**
+
+**Run locally:**
 
 ```bash
 git clone https://github.com/p-m-p/shared-worker-utils.git
