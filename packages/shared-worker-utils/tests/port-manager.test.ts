@@ -201,7 +201,7 @@ describe('PortManager', () => {
     // Client should still exist but not be counted as connected
     expect(portManager.getTotalCount()).toBe(0)
     expect(portManager.getActiveCount()).toBe(0)
-    expect(portManager.getStaleClientCount()).toBe(1)
+    expect(portManager.getStaleCount()).toBe(1)
     expect(onLog).toHaveBeenCalledWith({
       message: '[PortManager] Client status update',
       level: 'info',
@@ -389,13 +389,13 @@ describe('PortManager', () => {
 
     // Client should be marked as stale
     expect(portManager.getTotalCount()).toBe(0)
-    expect(portManager.getStaleClientCount()).toBe(1)
+    expect(portManager.getStaleCount()).toBe(1)
 
     // Advance time past the staleClientTimeout
     vi.advanceTimersByTime(staleClientTimeout + pingInterval)
 
     // Client should now be auto-removed
-    expect(portManager.getStaleClientCount()).toBe(0)
+    expect(portManager.getStaleCount()).toBe(0)
     expect(onLog).toHaveBeenCalledWith({
       message: '[PortManager] Auto-removed stale client',
       level: 'info',
@@ -417,13 +417,13 @@ describe('PortManager', () => {
     vi.advanceTimersByTime(pingTimeout + pingInterval)
 
     // Client should be stale
-    expect(portManager.getStaleClientCount()).toBe(1)
+    expect(portManager.getStaleCount()).toBe(1)
 
     // Advance time significantly
     vi.advanceTimersByTime(100_000)
 
     // Client should still be stale (not removed)
-    expect(portManager.getStaleClientCount()).toBe(1)
+    expect(portManager.getStaleCount()).toBe(1)
   })
 
   it('should manually remove all stale clients with removeStaleClients()', () => {
@@ -452,7 +452,7 @@ describe('PortManager', () => {
     vi.advanceTimersByTime(pingTimeout + pingInterval)
 
     // Two clients should be stale, one connected
-    expect(portManager.getStaleClientCount()).toBe(2)
+    expect(portManager.getStaleCount()).toBe(2)
     expect(portManager.getTotalCount()).toBe(1)
 
     // Manually remove stale clients
@@ -460,7 +460,7 @@ describe('PortManager', () => {
 
     // Should return count of removed clients
     expect(removedCount).toBe(2)
-    expect(portManager.getStaleClientCount()).toBe(0)
+    expect(portManager.getStaleCount()).toBe(0)
     expect(portManager.getTotalCount()).toBe(1)
     expect(onLog).toHaveBeenCalledWith({
       message: '[PortManager] Manually removed stale clients',
@@ -502,7 +502,7 @@ describe('PortManager', () => {
     vi.advanceTimersByTime(pingInterval)
     vi.advanceTimersByTime(pingTimeout + pingInterval)
 
-    expect(portManager.getStaleClientCount()).toBe(1)
+    expect(portManager.getStaleCount()).toBe(1)
 
     // Client reconnects by sending a message - this should clear staleTimestamp
     mockPort.simulateMessage({ type: 'custom', data: 'reconnect' })
@@ -514,7 +514,7 @@ describe('PortManager', () => {
     })
 
     // Client should be connected again
-    expect(portManager.getStaleClientCount()).toBe(0)
+    expect(portManager.getStaleCount()).toBe(0)
     expect(portManager.getTotalCount()).toBe(1)
 
     // Advance just a short time and verify client is still connected
@@ -536,7 +536,7 @@ describe('PortManager', () => {
 
     // Client should still be connected (staleTimestamp was cleared on reconnect)
     expect(portManager.getTotalCount()).toBe(1)
-    expect(portManager.getStaleClientCount()).toBe(0)
+    expect(portManager.getStaleCount()).toBe(0)
   })
 
   it('should clean up on destroy', () => {

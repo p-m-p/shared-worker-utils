@@ -127,7 +127,7 @@ describe('SharedWorkerClient', () => {
       { onMessage }
     )
 
-    expect(portWrapper.getIsVisible()).toBe(false)
+    expect(portWrapper.isVisible()).toBe(false)
   })
 
   it('should respond to ping messages with pong', () => {
@@ -225,7 +225,7 @@ describe('SharedWorkerClient', () => {
       type: '@shared-worker-utils/visibility-change',
       visible: false,
     })
-    expect(portWrapper.getIsVisible()).toBe(false)
+    expect(portWrapper.isVisible()).toBe(false)
     expect(onLog).toHaveBeenCalledWith({
       message: '[SharedWorkerClient] Tab visibility changed',
       level: 'info',
@@ -243,7 +243,7 @@ describe('SharedWorkerClient', () => {
       { onMessage, onLog }
     )
 
-    expect(portWrapper.getIsVisible()).toBe(false)
+    expect(portWrapper.isVisible()).toBe(false)
 
     // Clear initial messages
     mockWorker.port.getAllMessages().length = 0
@@ -256,7 +256,7 @@ describe('SharedWorkerClient', () => {
       type: '@shared-worker-utils/visibility-change',
       visible: true,
     })
-    expect(portWrapper.getIsVisible()).toBe(true)
+    expect(portWrapper.isVisible()).toBe(true)
     expect(onLog).toHaveBeenCalledWith({
       message: '[SharedWorkerClient] Tab visibility changed',
       level: 'info',

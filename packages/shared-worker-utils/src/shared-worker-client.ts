@@ -76,7 +76,7 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
   /**
    * Check if the tab is currently visible
    */
-  getIsVisible(): boolean {
+  isVisible(): boolean {
     return this.isTabVisible
   }
 
