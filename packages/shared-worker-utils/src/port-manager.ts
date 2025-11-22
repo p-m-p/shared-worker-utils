@@ -153,7 +153,7 @@ export class PortManager<TMessage = unknown> extends Logger {
   /**
    * Get the number of stale clients
    */
-  getStaleClientCount(): number {
+  getStaleCount(): number {
     let count = 0
     for (const client of this.clients.values()) {
       if (client.status === 'stale') count++

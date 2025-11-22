@@ -198,7 +198,7 @@ Then open http://localhost:5173 in multiple tabs!
 - `broadcast(message: unknown): void` - Broadcast a message to all connected clients (excludes stale)
 - `getActiveCount(): number` - Get count of active (visible and connected) clients
 - `getTotalCount(): number` - Get count of connected clients (excludes stale)
-- `getStaleClientCount(): number` - Get count of stale clients
+- `getStaleCount(): number` - Get count of stale clients
 - `removeStaleClients(): number` - Manually remove all stale clients and return count removed
 - `destroy(): void` - Clean up resources
 
