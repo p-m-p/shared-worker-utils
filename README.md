@@ -213,7 +213,7 @@ Then open http://localhost:5173 in multiple tabs!
 
 - `send(message: unknown): void` - Send a message to the SharedWorker
 - `disconnect(): void` - Disconnect from the SharedWorker
-- `getIsVisible(): boolean` - Check if the tab is currently visible
+- `isVisible(): boolean` - Check if the tab is currently visible
 
 [Full API Documentation →](./packages/shared-worker-utils/README.md)
 

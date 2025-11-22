@@ -180,7 +180,7 @@ const client = new SharedWorkerClient<WorkerMessage>(worker, {
 client.send({ type: 'custom', data: 'hello' })
 
 // Check visibility
-if (client.getIsVisible()) {
+if (client.isVisible()) {
   // Tab is visible
 }
 
@@ -260,7 +260,7 @@ interface SharedWorkerClientOptions<TMessage = unknown> {
 
 - `send(message: unknown): void` - Send a message to the SharedWorker
 - `disconnect(): void` - Disconnect from the SharedWorker
-- `getIsVisible(): boolean` - Check if the tab is currently visible
+- `isVisible(): boolean` - Check if the tab is currently visible
 
 ## Structured Logging
 
