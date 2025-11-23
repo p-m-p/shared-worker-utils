@@ -5,10 +5,12 @@ This guide explains how to deploy the SharedWorker example application to GitHub
 ## Prerequisites
 
 ### For GitHub Pages Deployment
+
 - GitHub repository with Pages enabled
 - GitHub Actions enabled in the repository
 
 ### For Cloudflare Workers Deployment
+
 - Cloudflare account (free tier works)
 - Cloudflare API token with Workers permissions
 - Cloudflare Account ID
@@ -35,11 +37,13 @@ Add the following secrets to your GitHub repository (Settings → Secrets and va
 ### 3. Update WebSocket URL
 
 After deploying the Cloudflare Worker for the first time, you'll get a worker URL like:
+
 ```
 https://shared-worker-example.YOUR_SUBDOMAIN.workers.dev
 ```
 
 Update the `VITE_WS_URL` in `.github/workflows/pages.yml`:
+
 ```yaml
 VITE_WS_URL: wss://shared-worker-example.YOUR_SUBDOMAIN.workers.dev
 ```
@@ -49,6 +53,7 @@ Replace `YOUR_SUBDOMAIN` with your actual Cloudflare subdomain.
 ### 4. Update Base Path (if needed)
 
 If your repository name is not `shared-worker-utils`, update the `VITE_BASE_PATH` in `.github/workflows/pages.yml`:
+
 ```yaml
 VITE_BASE_PATH: /YOUR_REPO_NAME/
 ```
@@ -58,12 +63,14 @@ VITE_BASE_PATH: /YOUR_REPO_NAME/
 ### Automatic Deployment
 
 Both the frontend and backend deploy automatically when you push to the `main` branch:
+
 - Frontend deploys to: `https://YOUR_USERNAME.github.io/shared-worker-utils/`
 - Backend deploys to: `https://shared-worker-example.YOUR_SUBDOMAIN.workers.dev`
 
 ### Manual Deployment
 
 You can also trigger deployments manually from GitHub Actions:
+
 1. Go to Actions tab
 2. Select "Deploy to GitHub Pages" or "Deploy to Cloudflare Workers"
 3. Click "Run workflow"
@@ -116,6 +123,7 @@ The WebSocket will connect to `ws://localhost:8787` by default when running loca
 ### CORS Configuration
 
 The Cloudflare Worker includes CORS headers (`Access-Control-Allow-Origin: *`) to allow connections from any origin. For production deployments, consider:
+
 - Restricting CORS to your specific GitHub Pages domain
 - Implementing authentication if needed
 - Adding rate limiting to prevent abuse
@@ -123,11 +131,13 @@ The Cloudflare Worker includes CORS headers (`Access-Control-Allow-Origin: *`) t
 ## Architecture
 
 ### Frontend (GitHub Pages)
+
 - Static HTML/CSS/JS built with Vite
 - Uses SharedWorker to manage WebSocket connection
 - Connects to Cloudflare Worker via WebSocket
 
 ### Backend (Cloudflare Workers)
+
 - Cloudflare Durable Object manages WebSocket connections
 - Broadcasts stock price updates to all connected clients
 - Automatically scales with number of clients

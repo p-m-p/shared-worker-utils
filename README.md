@@ -48,14 +48,14 @@ import {
 import {
   PortManager,
   SharedWorkerClient,
-} from 'https://esm.sh/shared-worker-utils@1.0.0'
+} from 'https://esm.sh/shared-worker-utils'
 ```
 
 **Example with SharedWorker:**
 
 ```typescript
 // my-worker.js
-import { PortManager } from 'https://esm.sh/shared-worker-utils@1'
+import { PortManager } from 'https://esm.sh/shared-worker-utils'
 
 const portManager = new PortManager({
   onActiveCountChange: (active, total) => {
@@ -71,7 +71,7 @@ self.onconnect = (event) => {
 ```html
 <!-- index.html -->
 <script type="module">
-  import { SharedWorkerClient } from 'https://esm.sh/shared-worker-utils@1'
+  import { SharedWorkerClient } from 'https://esm.sh/shared-worker-utils'
 
   const worker = new SharedWorker('./my-worker.js', { type: 'module' })
   const client = new SharedWorkerClient(worker, {
