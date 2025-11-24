@@ -1,0 +1,26 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Connection lines -->
+  <line x1="16" y1="16" x2="8" y2="8" stroke="#6c757d" stroke-width="1.5" opacity="0.4"/>
+  <line x1="16" y1="16" x2="24" y2="8" stroke="#6c757d" stroke-width="1.5" opacity="0.4"/>
+  <line x1="16" y1="16" x2="16" y2="26" stroke="#6c757d" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- Central worker node -->
+  <circle cx="16" cy="16" r="7" fill="#4dabf7" stroke="#339af0" stroke-width="2"/>
+  <circle cx="16" cy="16" r="4" fill="#1971c2" opacity="0.4"/>
+  
+  <!-- Small center dot -->
+  <circle cx="16" cy="16" r="2" fill="#fff"/>
+
+  <!-- Client nodes (tabs) -->
+  <!-- Top left -->
+  <circle cx="8" cy="8" r="4" fill="#51cf66" stroke="#37b24d" stroke-width="1.5"/>
+  <rect x="6.5" y="6.5" width="3" height="3" fill="#fff" opacity="0.8" rx="0.5"/>
+
+  <!-- Top right -->
+  <circle cx="24" cy="8" r="4" fill="#51cf66" stroke="#37b24d" stroke-width="1.5"/>
+  <rect x="22.5" y="6.5" width="3" height="3" fill="#fff" opacity="0.8" rx="0.5"/>
+
+  <!-- Bottom center -->
+  <circle cx="16" cy="26" r="4" fill="#51cf66" stroke="#37b24d" stroke-width="1.5"/>
+  <rect x="14.5" y="24.5" width="3" height="3" fill="#fff" opacity="0.8" rx="0.5"/>
+</svg>
