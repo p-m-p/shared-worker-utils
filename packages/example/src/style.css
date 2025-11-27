@@ -14,46 +14,28 @@
 
   color-scheme: light dark;
 
-  /* Color custom properties with fallbacks for browsers without light-dark() support */
-  --color-text: rgba(255, 255, 255, 0.87);
+  /* Color custom properties using light-dark() */
   --color-text: light-dark(#213547, rgba(255, 255, 255, 0.87));
-  --color-background: #1a1a1a;
   --color-background: light-dark(#f5f5f5, #1a1a1a);
-  --color-heading: #fff;
   --color-heading: light-dark(#213547, #fff);
-  --color-label: rgba(255, 255, 255, 0.6);
   --color-label: light-dark(rgba(0, 0, 0, 0.6), rgba(255, 255, 255, 0.6));
-  --color-info-text: rgba(255, 255, 255, 0.8);
   --color-info-text: light-dark(rgba(0, 0, 0, 0.7), rgba(255, 255, 255, 0.8));
-  --color-info-strong: #fff;
   --color-info-strong: light-dark(#213547, #fff);
-  --color-th: rgba(255, 255, 255, 0.9);
   --color-th: light-dark(rgba(0, 0, 0, 0.8), rgba(255, 255, 255, 0.9));
-  --color-symbol: #fff;
   --color-symbol: light-dark(#213547, #fff);
-  --color-price: rgba(255, 255, 255, 0.9);
   --color-price: light-dark(rgba(0, 0, 0, 0.9), rgba(255, 255, 255, 0.9));
-  --color-timestamp: rgba(255, 255, 255, 0.5);
   --color-timestamp: light-dark(rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0.5));
-  --color-loading: rgba(255, 255, 255, 0.6);
   --color-loading: light-dark(rgba(0, 0, 0, 0.6), rgba(255, 255, 255, 0.6));
 
   /* Background custom properties */
-  --bg-status-bar: rgba(255, 255, 255, 0.05);
   --bg-status-bar: light-dark(rgba(0, 0, 0, 0.03), rgba(255, 255, 255, 0.05));
-  --bg-info-box: rgba(59, 130, 246, 0.1);
   --bg-info-box: light-dark(rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.1));
-  --bg-table-container: rgba(255, 255, 255, 0.02);
   --bg-table-container: light-dark(white, rgba(255, 255, 255, 0.02));
-  --bg-thead: rgba(255, 255, 255, 0.05);
   --bg-thead: light-dark(rgba(0, 0, 0, 0.03), rgba(255, 255, 255, 0.05));
-  --bg-row-hover: rgba(255, 255, 255, 0.03);
   --bg-row-hover: light-dark(rgba(0, 0, 0, 0.02), rgba(255, 255, 255, 0.03));
 
   /* Border custom properties */
-  --border-color: rgba(255, 255, 255, 0.1);
   --border-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
-  --border-color-subtle: rgba(255, 255, 255, 0.05);
   --border-color-subtle: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
 
   /* Status colors (same in both themes) */
