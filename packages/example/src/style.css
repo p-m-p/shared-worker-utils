@@ -13,8 +13,44 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #1a1a1a;
+
+  /* Color custom properties using light-dark() */
+  --color-text: light-dark(#213547, rgba(255, 255, 255, 0.87));
+  --color-background: light-dark(#f5f5f5, #1a1a1a);
+  --color-heading: light-dark(#213547, #fff);
+  --color-label: light-dark(rgba(0, 0, 0, 0.6), rgba(255, 255, 255, 0.6));
+  --color-info-text: light-dark(rgba(0, 0, 0, 0.7), rgba(255, 255, 255, 0.8));
+  --color-info-strong: light-dark(#213547, #fff);
+  --color-th: light-dark(rgba(0, 0, 0, 0.8), rgba(255, 255, 255, 0.9));
+  --color-symbol: light-dark(#213547, #fff);
+  --color-price: light-dark(rgba(0, 0, 0, 0.9), rgba(255, 255, 255, 0.9));
+  --color-timestamp: light-dark(rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0.5));
+  --color-loading: light-dark(rgba(0, 0, 0, 0.6), rgba(255, 255, 255, 0.6));
+
+  /* Background custom properties */
+  --bg-status-bar: light-dark(rgba(0, 0, 0, 0.03), rgba(255, 255, 255, 0.05));
+  --bg-info-box: light-dark(rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.1));
+  --bg-table-container: light-dark(white, rgba(255, 255, 255, 0.02));
+  --bg-thead: light-dark(rgba(0, 0, 0, 0.03), rgba(255, 255, 255, 0.05));
+  --bg-row-hover: light-dark(rgba(0, 0, 0, 0.02), rgba(255, 255, 255, 0.03));
+
+  /* Border custom properties */
+  --border-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+  --border-color-subtle: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.05));
+
+  /* Status colors (same in both themes) */
+  --color-status-connected: #10b981;
+  --color-status-disconnected: #ef4444;
+  --color-status-visible: #3b82f6;
+  --color-status-hidden: #6b7280;
+  --color-positive: #10b981;
+  --color-negative: #ef4444;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-active: #1d4ed8;
+
+  color: var(--color-text);
+  background-color: var(--color-background);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -45,7 +81,7 @@ header {
 h1 {
   font-size: 2rem;
   margin: 0 0 1.5rem 0;
-  color: #fff;
+  color: var(--color-heading);
 }
 
 .status-bar {
@@ -53,9 +89,9 @@ h1 {
   gap: 2rem;
   flex-wrap: wrap;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-status-bar);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
 }
 
 .status-item {
@@ -66,7 +102,7 @@ h1 {
 
 .status-item .label {
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-label);
 }
 
 .status {
@@ -77,29 +113,29 @@ h1 {
 }
 
 .status.connected {
-  background: #10b981;
+  background: var(--color-status-connected);
   color: white;
 }
 
 .status.disconnected {
-  background: #ef4444;
+  background: var(--color-status-disconnected);
   color: white;
 }
 
 .status.visible {
-  background: #3b82f6;
+  background: var(--color-status-visible);
   color: white;
 }
 
 .status.hidden {
-  background: #6b7280;
+  background: var(--color-status-hidden);
   color: white;
 }
 
 .open-tab-btn {
   margin-left: auto;
   padding: 0.5rem 1rem;
-  background: #3b82f6;
+  background: var(--color-primary);
   color: white;
   border: none;
   border-radius: 6px;
@@ -110,35 +146,35 @@ h1 {
 }
 
 .open-tab-btn:hover {
-  background: #2563eb;
+  background: var(--color-primary-hover);
 }
 
 .open-tab-btn:active {
-  background: #1d4ed8;
+  background: var(--color-primary-active);
 }
 
 .info-box {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background: rgba(59, 130, 246, 0.1);
-  border-left: 4px solid #3b82f6;
+  background: var(--bg-info-box);
+  border-left: 4px solid var(--color-primary);
   border-radius: 4px;
 }
 
 .info-box p {
   margin: 0.5rem 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-info-text);
 }
 
 .info-box strong {
-  color: #fff;
+  color: var(--color-info-strong);
 }
 
 .table-container {
   overflow-x: auto;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-table-container);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
 }
 
 table {
@@ -148,15 +184,15 @@ table {
 }
 
 thead {
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-thead);
+  border-bottom: 2px solid var(--border-color);
 }
 
 th {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-th);
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -164,7 +200,7 @@ th {
 
 td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color-subtle);
 }
 
 tbody tr {
@@ -172,19 +208,19 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-row-hover);
 }
 
 .symbol {
   font-weight: 700;
   font-size: 1.1rem;
-  color: #fff;
+  color: var(--color-symbol);
 }
 
 .price {
   font-weight: 600;
   font-size: 1.05rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-price);
 }
 
 .change {
@@ -192,93 +228,23 @@ tbody tr:hover {
 }
 
 .change.positive {
-  color: #10b981;
+  color: var(--color-positive);
 }
 
 .change.negative {
-  color: #ef4444;
+  color: var(--color-negative);
 }
 
 .timestamp {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-timestamp);
   font-size: 0.875rem;
 }
 
 .loading {
   text-align: center;
   padding: 2rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-loading);
   font-style: italic;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #f5f5f5;
-  }
-
-  h1 {
-    color: #213547;
-  }
-
-  .status-bar {
-    background: rgba(0, 0, 0, 0.03);
-    border-color: rgba(0, 0, 0, 0.1);
-  }
-
-  .status-item .label {
-    color: rgba(0, 0, 0, 0.6);
-  }
-
-  .info-box {
-    background: rgba(59, 130, 246, 0.08);
-  }
-
-  .info-box p {
-    color: rgba(0, 0, 0, 0.7);
-  }
-
-  .info-box strong {
-    color: #213547;
-  }
-
-  .table-container {
-    background: white;
-    border-color: rgba(0, 0, 0, 0.1);
-  }
-
-  thead {
-    background: rgba(0, 0, 0, 0.03);
-    border-bottom-color: rgba(0, 0, 0, 0.1);
-  }
-
-  th {
-    color: rgba(0, 0, 0, 0.8);
-  }
-
-  td {
-    border-bottom-color: rgba(0, 0, 0, 0.05);
-  }
-
-  tbody tr:hover {
-    background: rgba(0, 0, 0, 0.02);
-  }
-
-  .symbol {
-    color: #213547;
-  }
-
-  .price {
-    color: rgba(0, 0, 0, 0.9);
-  }
-
-  .timestamp {
-    color: rgba(0, 0, 0, 0.5);
-  }
-
-  .loading {
-    color: rgba(0, 0, 0, 0.6);
-  }
 }
 
 @media (max-width: 768px) {
