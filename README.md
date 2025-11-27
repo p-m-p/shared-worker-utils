@@ -5,7 +5,7 @@
 # shared-worker-utils
 
 [![npm version](https://img.shields.io/npm/v/shared-worker-utils.svg)](https://www.npmjs.com/package/shared-worker-utils)
-[![Build](https://img.shields.io/github/actions/workflow/status/p-m-p/shared-worker-utils/release.yml?label=Build)](https://github.com/p-m-p/shared-worker-utils/actions/workflows/release.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/p-m-p/shared-worker-utils/main.yml?label=Build)](https://github.com/p-m-p/shared-worker-utils/actions/workflows/main.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 A lightweight TypeScript library for managing SharedWorker port connections with automatic heartbeat, visibility tracking, and resource optimization.
