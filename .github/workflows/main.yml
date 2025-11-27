@@ -7,13 +7,15 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: main-${{ github.ref }}
+  group: main-branch-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v6
