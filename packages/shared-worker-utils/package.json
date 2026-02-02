@@ -40,7 +40,7 @@
   "homepage": "https://github.com/p-m-p/shared-worker-utils#readme",
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "jsdom": "^27.0.1",
+    "jsdom": "^28.0.0",
     "vite-plugin-dts": "^4.3.0",
     "vitest": "^4.0.3"
   }
