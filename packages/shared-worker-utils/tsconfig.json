@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
+    "rootDir": "src",
     "noEmit": true,
 
     /* Linting */

@@ -13,7 +13,7 @@ export default defineConfig(({ mode }) => ({
       external: [],
     },
   },
-  plugins: mode !== 'test' ? [dts({ rollupTypes: true })] : [],
+  plugins: mode !== 'test' ? [dts()] : [],
   test: {
     environment: 'jsdom',
     globals: true,
