@@ -41,7 +41,7 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "jsdom": "^29.0.0",
-    "vite-plugin-dts": "^4.3.0",
+    "vite-plugin-dts": "^5.0.0",
     "vitest": "^4.0.3"
   }
 }
