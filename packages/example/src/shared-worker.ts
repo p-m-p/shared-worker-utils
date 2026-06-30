@@ -7,11 +7,17 @@ declare const self: SharedWorkerGlobalScope
 // Define message types for application messages
 type AppMessage = never // No application messages from clients in this example
 
-let socket: WebSocket | undefined
 // Use environment variable for WebSocket URL, default to wrangler dev server (localhost:8787)
 const WEBSOCKET_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8787'
-let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 const RECONNECT_DELAY = 3000
+
+const wsState: {
+  socket: WebSocket | undefined
+  reconnectTimeout: ReturnType<typeof setTimeout> | undefined
+} = {
+  socket: undefined,
+  reconnectTimeout: undefined,
+}
 
 function log(logEntry: LogEntry) {
   const contextString = logEntry.context
@@ -28,13 +34,13 @@ const portManager = new PortManager<AppMessage>({
   pingTimeout: 5000,
   onActiveCountChange: (activeCount, totalCount) => {
     // Manage WebSocket connection based on active clients
-    if (activeCount === 0 && socket) {
+    if (activeCount === 0 && wsState.socket) {
       log({
         message: '[WebSocket] No active clients, pausing WebSocket connection',
         level: 'info',
       })
       disconnectWebSocket()
-    } else if (activeCount > 0 && !socket) {
+    } else if (activeCount > 0 && !wsState.socket) {
       log({
         message:
           '[WebSocket] Active client detected, resuming WebSocket connection',
@@ -53,8 +59,8 @@ const portManager = new PortManager<AppMessage>({
   },
   onMessage: (_port, message) => {
     // Forward application messages to WebSocket server if needed
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify(message))
+    if (wsState.socket && wsState.socket.readyState === WebSocket.OPEN) {
+      wsState.socket.send(JSON.stringify(message))
     }
   },
   onLog: log,
@@ -62,9 +68,9 @@ const portManager = new PortManager<AppMessage>({
 
 function connectWebSocket() {
   if (
-    socket &&
-    (socket.readyState === WebSocket.CONNECTING ||
-      socket.readyState === WebSocket.OPEN)
+    wsState.socket &&
+    (wsState.socket.readyState === WebSocket.CONNECTING ||
+      wsState.socket.readyState === WebSocket.OPEN)
   ) {
     log({
       message: '[WebSocket] Already connected or connecting',
@@ -77,9 +83,9 @@ function connectWebSocket() {
     message: '[WebSocket] Connecting to server...',
     level: 'info',
   })
-  socket = new WebSocket(WEBSOCKET_URL)
+  wsState.socket = new WebSocket(WEBSOCKET_URL)
 
-  socket.addEventListener('open', () => {
+  wsState.socket.addEventListener('open', () => {
     log({
       message: '[WebSocket] Connected',
       level: 'info',
@@ -92,7 +98,7 @@ function connectWebSocket() {
     })
   })
 
-  socket.addEventListener('message', (event) => {
+  wsState.socket.addEventListener('message', (event) => {
     try {
       const data = JSON.parse(event.data)
       log({
@@ -108,12 +114,12 @@ function connectWebSocket() {
     }
   })
 
-  socket.addEventListener('close', () => {
+  wsState.socket.addEventListener('close', () => {
     log({
       message: '[WebSocket] Disconnected',
       level: 'info',
     })
-    socket = undefined
+    wsState.socket = undefined
 
     // Notify all connected clients
     portManager.broadcast({
@@ -130,7 +136,7 @@ function connectWebSocket() {
         level: 'info',
         context: { delayMs: RECONNECT_DELAY, activeClients: activeCount },
       })
-      reconnectTimeout = setTimeout(connectWebSocket, RECONNECT_DELAY)
+      wsState.reconnectTimeout = setTimeout(connectWebSocket, RECONNECT_DELAY)
     } else {
       log({
         message: '[WebSocket] No active clients, staying disconnected',
@@ -139,24 +145,24 @@ function connectWebSocket() {
     }
   })
 
-  socket.addEventListener('error', (error) => {
+  wsState.socket.addEventListener('error', (error) => {
     console.error('[WebSocket] Error:', error)
   })
 }
 
 function disconnectWebSocket() {
-  if (reconnectTimeout) {
-    clearTimeout(reconnectTimeout)
-    reconnectTimeout = undefined
+  if (wsState.reconnectTimeout) {
+    clearTimeout(wsState.reconnectTimeout)
+    wsState.reconnectTimeout = undefined
   }
 
-  if (socket) {
+  if (wsState.socket) {
     log({
       message: '[WebSocket] Disconnecting',
       level: 'info',
     })
-    socket.close()
-    socket = undefined
+    wsState.socket.close()
+    wsState.socket = undefined
   }
 }
 
@@ -168,9 +174,9 @@ self.addEventListener('connect', (event: MessageEvent) => {
   portManager.handleConnect(port)
 
   // Send current connection status to the new client
-  if (socket) {
+  if (wsState.socket) {
     const status =
-      socket.readyState === WebSocket.OPEN ? 'connected' : 'connecting'
+      wsState.socket.readyState === WebSocket.OPEN ? 'connected' : 'connecting'
     port.postMessage({
       type: 'connection-status',
       status,

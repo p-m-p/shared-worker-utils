@@ -13,6 +13,45 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
   private isTabVisible: boolean
   private abortController = new AbortController()
 
+  private handleMessage = (event: MessageEvent): void => {
+    const message = event.data as { type?: string }
+
+    // Handle internal ping messages
+    if (message.type === MESSAGE_TYPES.PING) {
+      this.log('Received ping from SharedWorker, sending pong', 'debug')
+      this.sendInternal(MESSAGE_TYPES.PONG)
+      return
+    }
+
+    // Filter out other internal messages
+    if (
+      message.type &&
+      Object.values(MESSAGE_TYPES).includes(
+        message.type as (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES]
+      )
+    ) {
+      return
+    }
+
+    // Pass non-internal messages to the consumer
+    this.onMessage(event.data as TMessage)
+  }
+
+  private handleVisibilityChange = (): void => {
+    const newVisibility = this.getDocumentVisibility()
+
+    if (newVisibility !== this.isTabVisible) {
+      this.isTabVisible = newVisibility
+      this.log('Tab visibility changed', 'info', {
+        visible: this.isTabVisible,
+      })
+
+      this.sendInternal(MESSAGE_TYPES.VISIBILITY_CHANGE, {
+        visible: this.isTabVisible,
+      })
+    }
+  }
+
   constructor(
     worker: SharedWorker,
     options: SharedWorkerClientOptions<TMessage>
@@ -49,6 +88,32 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
     this.send({ type, ...data })
   }
 
+  private setupMessageHandler(): void {
+    this.port.addEventListener('message', this.handleMessage, {
+      signal: this.abortController.signal,
+    })
+  }
+
+  private setupVisibilityHandler(): void {
+    document.addEventListener('visibilitychange', this.handleVisibilityChange, {
+      signal: this.abortController.signal,
+    })
+  }
+
+  private setupUnloadHandler(): void {
+    window.addEventListener(
+      'beforeunload',
+      () => {
+        this.disconnect()
+      },
+      { signal: this.abortController.signal }
+    )
+  }
+
+  protected getLogPrefix(): string {
+    return '[SharedWorkerClient]'
+  }
+
   /**
    * Send a message to the SharedWorker
    */
@@ -78,70 +143,5 @@ export class SharedWorkerClient<TMessage = unknown> extends Logger {
    */
   isVisible(): boolean {
     return this.isTabVisible
-  }
-
-  private handleMessage = (event: MessageEvent): void => {
-    const message = event.data as { type?: string }
-
-    // Handle internal ping messages
-    if (message.type === MESSAGE_TYPES.PING) {
-      this.log('Received ping from SharedWorker, sending pong', 'debug')
-      this.sendInternal(MESSAGE_TYPES.PONG)
-      return
-    }
-
-    // Filter out other internal messages
-    if (
-      message.type &&
-      Object.values(MESSAGE_TYPES).includes(
-        message.type as (typeof MESSAGE_TYPES)[keyof typeof MESSAGE_TYPES]
-      )
-    ) {
-      return
-    }
-
-    // Pass non-internal messages to the consumer
-    this.onMessage(event.data as TMessage)
-  }
-
-  private setupMessageHandler(): void {
-    this.port.addEventListener('message', this.handleMessage, {
-      signal: this.abortController.signal,
-    })
-  }
-
-  private handleVisibilityChange = (): void => {
-    const newVisibility = this.getDocumentVisibility()
-
-    if (newVisibility !== this.isTabVisible) {
-      this.isTabVisible = newVisibility
-      this.log('Tab visibility changed', 'info', {
-        visible: this.isTabVisible,
-      })
-
-      this.sendInternal(MESSAGE_TYPES.VISIBILITY_CHANGE, {
-        visible: this.isTabVisible,
-      })
-    }
-  }
-
-  private setupVisibilityHandler(): void {
-    document.addEventListener('visibilitychange', this.handleVisibilityChange, {
-      signal: this.abortController.signal,
-    })
-  }
-
-  private setupUnloadHandler(): void {
-    window.addEventListener(
-      'beforeunload',
-      () => {
-        this.disconnect()
-      },
-      { signal: this.abortController.signal }
-    )
-  }
-
-  protected getLogPrefix(): string {
-    return '[SharedWorkerClient]'
   }
 }
