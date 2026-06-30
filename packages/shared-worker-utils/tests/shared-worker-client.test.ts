@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { SharedWorkerClient } from '../src/shared-worker-client'
 
 // Test message type
@@ -57,11 +57,11 @@ const mockDocument = {
   hidden: false,
   listeners: new Map<string, () => void>(),
   addEventListener(type: string, listener: () => void) {
-    this.listeners.set(type, listener)
+    mockDocument.listeners.set(type, listener)
   },
-  simulateVisibilityChange(hidden: boolean) {
-    this.hidden = hidden
-    const listener = this.listeners.get('visibilitychange')
+  simulateVisibilityChange(isHidden: boolean) {
+    mockDocument.hidden = isHidden
+    const listener = mockDocument.listeners.get('visibilitychange')
     if (listener) {
       listener()
     }
@@ -72,10 +72,10 @@ const mockDocument = {
 const mockWindow = {
   listeners: new Map<string, () => void>(),
   addEventListener(type: string, listener: () => void) {
-    this.listeners.set(type, listener)
+    mockWindow.listeners.set(type, listener)
   },
   simulateBeforeUnload() {
-    const listener = this.listeners.get('beforeunload')
+    const listener = mockWindow.listeners.get('beforeunload')
     if (listener) {
       listener()
     }
@@ -89,13 +89,15 @@ describe('SharedWorkerClient', () => {
   beforeEach(() => {
     mockWorker = new MockSharedWorker()
     // Override global document and window
-    ;(globalThis as unknown as { document: typeof mockDocument }).document =
-      mockDocument
-    ;(globalThis as unknown as { window: typeof mockWindow }).window =
-      mockWindow
+    vi.stubGlobal('document', mockDocument)
+    vi.stubGlobal('window', mockWindow)
     mockDocument.hidden = false
     mockDocument.listeners.clear()
     mockWindow.listeners.clear()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('should initialize and start the port', () => {

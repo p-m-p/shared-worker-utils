@@ -38,15 +38,6 @@ export class PortManager<TMessage = unknown> extends Logger {
   }
 
   /**
-   * Handle a new port connection
-   */
-  handleConnect(port: MessagePort): void {
-    this.addClient(port)
-    this.updateClientCount()
-    port.start()
-  }
-
-  /**
    * Add a client to the manager
    * Sets up the message listener and initializes client state
    */
@@ -93,10 +84,9 @@ export class PortManager<TMessage = unknown> extends Logger {
     let active = 0
     let total = 0
     for (const client of this.clients.values()) {
-      if (this.isConnected(client)) {
-        total++
-        if (client.visible) active++
-      }
+      if (!this.isConnected(client)) continue
+      total++
+      if (client.visible) active++
     }
     return { active, total }
   }
@@ -114,51 +104,6 @@ export class PortManager<TMessage = unknown> extends Logger {
         remainingClients: this.clients.size,
       })
     }
-  }
-
-  /**
-   * Broadcast a message to all connected clients
-   * Skips clients marked as stale
-   */
-  broadcast(message: unknown): void {
-    for (const [port, client] of this.clients) {
-      if (this.isConnected(client)) {
-        port.postMessage(message)
-      }
-    }
-  }
-
-  /**
-   * Get the number of active (visible and connected) clients
-   */
-  getActiveCount(): number {
-    let count = 0
-    for (const client of this.clients.values()) {
-      if (this.isConnected(client) && client.visible) count++
-    }
-    return count
-  }
-
-  /**
-   * Get the total number of connected clients (excludes stale clients)
-   */
-  getTotalCount(): number {
-    let count = 0
-    for (const client of this.clients.values()) {
-      if (this.isConnected(client)) count++
-    }
-    return count
-  }
-
-  /**
-   * Get the number of stale clients
-   */
-  getStaleCount(): number {
-    let count = 0
-    for (const client of this.clients.values()) {
-      if (client.status === 'stale') count++
-    }
-    return count
   }
 
   private handleMessage(port: MessagePort, data: unknown): void {
@@ -276,12 +221,66 @@ export class PortManager<TMessage = unknown> extends Logger {
   }
 
   /**
+   * Handle a new port connection
+   */
+  handleConnect(port: MessagePort): void {
+    this.addClient(port)
+    this.updateClientCount()
+    port.start()
+  }
+
+  /**
+   * Broadcast a message to all connected clients
+   * Skips clients marked as stale
+   */
+  broadcast(message: unknown): void {
+    for (const [port, client] of this.clients) {
+      if (this.isConnected(client)) {
+        port.postMessage(message)
+      }
+    }
+  }
+
+  /**
+   * Get the number of active (visible and connected) clients
+   */
+  getActiveCount(): number {
+    let count = 0
+    for (const client of this.clients.values()) {
+      if (this.isConnected(client) && client.visible) count++
+    }
+    return count
+  }
+
+  /**
+   * Get the total number of connected clients (excludes stale clients)
+   */
+  getTotalCount(): number {
+    let count = 0
+    for (const client of this.clients.values()) {
+      if (this.isConnected(client)) count++
+    }
+    return count
+  }
+
+  /**
+   * Get the number of stale clients
+   */
+  getStaleCount(): number {
+    let count = 0
+    for (const client of this.clients.values()) {
+      if (client.status === 'stale') count++
+    }
+    return count
+  }
+
+  /**
    * Manually remove all stale clients
    * @returns Number of clients removed
    */
   removeStaleClients(): number {
     let removedCount = 0
-    const ports = [...this.clients.keys()]
+    const ports = this.clients.keys().toArray()
 
     for (const port of ports) {
       const client = this.clients.get(port)
@@ -305,7 +304,7 @@ export class PortManager<TMessage = unknown> extends Logger {
   destroy(): void {
     clearInterval(this.pingIntervalId)
     // Remove all clients (aborts controllers and clears map)
-    const ports = [...this.clients.keys()]
+    const ports = this.clients.keys().toArray()
     for (const port of ports) {
       this.removeClient(port)
     }

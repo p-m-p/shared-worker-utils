@@ -189,11 +189,13 @@ export class StockWebSocket implements DurableObject {
   }
 
   stopBroadcasting() {
-    if (this.broadcastInterval !== null) {
-      console.log('Stopping stock price broadcasting')
-      clearInterval(this.broadcastInterval)
-      this.broadcastInterval = null
+    if (this.broadcastInterval === null) {
+      return
     }
+
+    console.log('Stopping stock price broadcasting')
+    clearInterval(this.broadcastInterval)
+    this.broadcastInterval = null
   }
 
   startHeartbeat() {
@@ -224,10 +226,12 @@ export class StockWebSocket implements DurableObject {
   }
 
   stopHeartbeat() {
-    if (this.heartbeatInterval !== null) {
-      console.log('Stopping heartbeat')
-      clearInterval(this.heartbeatInterval)
-      this.heartbeatInterval = null
+    if (this.heartbeatInterval === null) {
+      return
     }
+
+    console.log('Stopping heartbeat')
+    clearInterval(this.heartbeatInterval)
+    this.heartbeatInterval = null
   }
 }

@@ -24,7 +24,7 @@ type WorkerMessage =
   | { type: 'stock-update'; data: StockData[] }
   | { type: 'client-info'; total: number; active: number; stale: number }
 
-let currentStockData: StockData[] = []
+const state = { currentStockData: [] as StockData[] }
 
 // Update connection status UI
 function updateConnectionStatus(status: string) {
@@ -49,7 +49,7 @@ function formatTime(timestamp: string): string {
 // Update stock table
 function updateStockTable(stocks: StockData[]) {
   // Store the data
-  currentStockData = stocks
+  state.currentStockData = stocks
 
   // Don't update UI if tab is not visible
   if (!portWrapper.isVisible()) {
@@ -57,12 +57,12 @@ function updateStockTable(stocks: StockData[]) {
   }
 
   // Clear existing rows
-  stockTbody.innerHTML = ''
+  stockTbody.replaceChildren()
 
   // Create rows for each stock
   for (const stock of stocks) {
     const row = document.createElement('tr')
-    const changeNumber = Number.parseFloat(stock.change)
+    const changeNumber = Number(stock.change)
     const changeClass = changeNumber >= 0 ? 'positive' : 'negative'
 
     row.innerHTML = `
@@ -115,8 +115,8 @@ const portWrapper = new SharedWorkerClient<WorkerMessage>(worker, {
 
 // Update table when tab becomes visible
 document.addEventListener('visibilitychange', () => {
-  if (portWrapper.isVisible() && currentStockData.length > 0) {
-    updateStockTable(currentStockData)
+  if (portWrapper.isVisible() && state.currentStockData.length > 0) {
+    updateStockTable(state.currentStockData)
   }
 })
 
