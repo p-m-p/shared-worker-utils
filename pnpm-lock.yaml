@@ -22,13 +22,13 @@ importers:
         version: 2.32.0(@typescript-eslint/parser@8.62.1(eslint@10.6.0)(typescript@6.0.3))(eslint@10.6.0)
       eslint-plugin-prettier:
         specifier: ^5.5.4
-        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@10.6.0))(eslint@10.6.0)(prettier@3.9.3)
+        version: 5.5.6(eslint-config-prettier@10.1.8(eslint@10.6.0))(eslint@10.6.0)(prettier@3.9.4)
       eslint-plugin-unicorn:
         specifier: ^69.0.0
         version: 69.0.0(eslint@10.6.0)
       prettier:
         specifier: ^3.6.2
-        version: 3.9.3
+        version: 3.9.4
       typescript:
         specifier: ~6.0.0
         version: 6.0.3
@@ -1990,8 +1990,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  prettier@3.9.3:
-    resolution: {integrity: sha512-HWmu+K+zvHNpaMfSnYeqdqrDbR16cuIXaPx8WoHaviQkDJh1/0BNtOZmHVQI5jc3wXv0H1yXc9wjvFdXh+n3hQ==}
+  prettier@3.9.4:
+    resolution: {integrity: sha512-yWG/o/4oJfo036EKAfK6ACAoDOfHeRHx4tuxkfBZiauURiaSmYwlpOr5LQqKtIkRD2z1PLteme2WoxEnj4tHTg==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -3738,10 +3738,10 @@ snapshots:
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-prettier@5.5.6(eslint-config-prettier@10.1.8(eslint@10.6.0))(eslint@10.6.0)(prettier@3.9.3):
+  eslint-plugin-prettier@5.5.6(eslint-config-prettier@10.1.8(eslint@10.6.0))(eslint@10.6.0)(prettier@3.9.4):
     dependencies:
       eslint: 10.6.0
-      prettier: 3.9.3
+      prettier: 3.9.4
       prettier-linter-helpers: 1.0.1
       synckit: 0.11.13
     optionalDependencies:
@@ -4473,7 +4473,7 @@ snapshots:
 
   prettier@2.8.8: {}
 
-  prettier@3.9.3: {}
+  prettier@3.9.4: {}
 
   punycode@2.3.1: {}
 
