@@ -2,7 +2,7 @@
   "name": "shared-worker-workspace",
   "private": true,
   "version": "0.0.0",
-  "packageManager": "pnpm@11.28.3",
+  "packageManager": "pnpm@12.8.1",
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter example dev",
